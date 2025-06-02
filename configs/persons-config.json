@@ -1,0 +1,119 @@
+{
+    "person": {
+        "foodPer60Sec": 0.5
+    },
+    "military": {
+        "foodPer60Sec": 0.7,
+        "infantry": {
+            "iran": {
+                "health": 30,
+                "power": 20
+            },
+            "arab": {
+                "health": 31,
+                "power": 21
+            },
+            "mongol": {
+                "health": 28,
+                "power": 18
+            },
+            "rome": {
+                "health": 32,
+                "power": 22
+            }
+        },
+        "archer": {
+            "iran": {
+                "health": 22,
+                "power": 28,
+                "range":4
+            },
+            "arab": {
+                "health": 24,
+                "power": 30,
+                "range": 6
+            },
+            "mongol": {
+                "health": 20,
+                "power": 32,
+                "range": 7
+            },
+            "rome": {
+                "health": 21,
+                "power": 26,
+                "range": 5
+            }
+        },
+        "cavalry": {
+            "iran": {
+                "health": 50,
+                "power": 35
+            },
+            "arab": {
+                "health": 48,
+                "power": 33
+            },
+            "mongol": {
+                "health": 55,
+                "power": 38
+            },
+            "rome": {
+                "health": 52,
+                "power": 36
+            }
+        },
+        "wizard": {
+            "iran": {
+                "health": 18,
+                "power": 40,
+                "ability": "heal",
+                "mana": 12
+            },
+            "arab": {
+                "health": 18,
+                "power": 40,
+                "ability": "fire",
+                "mana": 19
+            },
+            "mongol": {
+                "health": 16,
+                "power": 45,
+                "ability": "spawn",
+                "mana": 18
+            },
+            "rome": {
+                "health": 19,
+                "power": 42,
+                "ability": "lightning",
+                "mana": 17
+            }
+        },
+        "hero": {
+            "iran": {
+                "name": "rostam",
+                "health": 70,
+                "power": 50,
+                "weapon": "mace"
+            },
+            "arab": {
+                "name": "saladin",
+                "health": 72,
+                "power": 55,
+                "weapon": "sword"
+            },
+            "mongol": {
+                "name": "kublai",
+                "health": 80,
+                "power": 60,
+                "weapon": "bow",
+                "range": 10
+            },
+            "rome": {
+                "name": "julius",
+                "health": 75,
+                "power": 55,
+                "weapon": "spear"
+            }
+        }
+    }
+}

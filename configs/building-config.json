@@ -1,0 +1,275 @@
+{
+    "townHall": {
+        "lvl1": {
+            "health": 350,
+            "capacity": 100
+        },
+        "lvl2": {
+            "health": 375,
+            "capacity": 150,
+            "upgradeCost": {
+                "coin": 8,
+                "wood": 20,
+                "stone": 12,
+                "iron": 10
+            }
+        },
+        "lvl3": {
+            "health": 400,
+            "capacity": 200,
+            "upgradeCost": {
+                "coin": 10,
+                "wood": 22,
+                "stone": 14,
+                "iron": 12
+            }
+        },
+        "lvl4": {
+            "health": 450,
+            "capacity": 250,
+            "upgradeCost": {
+                "coin": 12,
+                "wood": 24,
+                "stone": 16,
+                "iron": 14
+            }
+        },
+        "lvl5": {
+            "health": 500,
+            "capacity": 300,
+            "upgradeCost": {
+                "coin": 4,
+                "wood": 26,
+                "stone": 18,
+                "iron": 16
+            }
+        }
+    },
+    "house": {
+        "cost": 6,
+        "health": 30,
+        "capacity": 6,
+        "capacityIncreaseTime": 60
+    },
+    "market": {
+        "health": 75,
+        "cost": {
+            "wood": 10,
+            "stone": 5
+        },
+        "tradingBox": 5,
+        "sellingPrices": {
+            "foods": 5,
+            "wood": 3,
+            "stone": 8,
+            "iron": 12
+        },
+        "buyingPrices": {
+            "foods": 6,
+            "wood": 4,
+            "stone": 10,
+            "iron": 14
+        }
+    },
+    "hospital": {
+        "cost": {
+            "wood": 8,
+            "stone": 6,
+            "iron": 4
+        },
+        "health": 70,
+        "heroTreatmentCost": null,
+        "findingCureForDisease": null
+    },
+    "barracks": {
+        "cost": {
+            "wood": 15,
+            "stone": 10
+        },
+        "health": 100,
+        "lvl1": {
+            "cost": {
+                "wood": 15,
+                "stone": 10
+            },
+            "unavailableUnits": [
+                "cavalry",
+                "wizard"
+            ]
+        },
+        "lvl2": {
+            "cost": {
+                "coin": 20
+            },
+            "unavailableUnits": null
+        }
+    },
+    "tower": {
+        "cost": {
+            "stone": 15
+        },
+        "health": 40,
+        "capacity": 4,
+        "attachments": {
+            "firePeat": {
+                "influentialIn": "attack",
+                "count": 5,
+                "cost": {
+                    "iron": 4,
+                    "coin": 1
+                }
+            },
+            "fence": {
+                "influentialIn": "Health",
+                "count": 10,
+                "cost": {
+                    "wood": 8,
+                    "coin": 1
+                }
+            }
+        }
+    },
+    "farms": {
+        "farm": {
+            "health": 10,
+            "lvl1": {
+                "cost": {
+                    "wood": 10
+                },
+                "miningTime": 60
+            },
+            "lvl2": {
+                "cost": {
+                    "wood": 7
+                },
+                "miningTime": 50
+            },
+            "lvl3": {
+                "cost": {
+                    "wood": 5
+                },
+                "miningTime": 45
+            },
+            "output": 8
+        },
+        "animalHusbandry": {
+            "health": 15,
+            "lvl1": {
+                "cost": {
+                    "wood": 12
+                },
+                "miningTime": 60
+            },
+            "lvl2": {
+                "cost": {
+                    "wood": 7
+                },
+                "miningTime": 50
+            },
+            "lvl3": {
+                "cost": {
+                    "wood": 5
+                },
+                "miningTime": 45
+            },
+            "output": 10
+        },
+        "lumbering": {
+            "health": 18,
+            "lvl1": {
+                "cost": {
+                    "wood": 5
+                },
+                "miningTime": 80
+            },
+            "lvl2": {
+                "cost": {
+                    "wood": 4
+                },
+                "miningTime": 70
+            },
+            "lvl3": {
+                "cost": {
+                    "wood": 3
+                },
+                "miningTime": 60
+            },
+            "output": 10
+        },
+        "stoneMine": {
+            "health": 20,
+            "lvl1": {
+                "cost": {
+                    "stone": 5,
+                    "wood": 5,
+                    "coin": 5
+                },
+                "miningTime": 120
+            },
+            "lvl2": {
+                "cost": {
+                    "iron": 4
+                },
+                "miningTime": 100
+            },
+            "lvl3": {
+                "cost": {
+                    "iron": 3
+                },
+                "miningTime": 80
+            },
+            "output": 8
+        },
+        "ironMine": {
+            "health": 20,
+            "lvl1": {
+                "cost": {
+                    "stone": 7,
+                    "wood": 10,
+                    "coin": 5
+                },
+                "miningTime": 120
+            },
+            "lvl2": {
+                "cost": {
+                    "iron": 6
+                },
+                "miningTime": 100
+            },
+            "lvl3": {
+                "cost": {
+                    "iron": 4
+                },
+                "miningTime": 80
+            },
+            "output": 8
+        },
+        "goldMine": {
+            "health": 20,
+            "lvl1": {
+                "cost": {
+                    "stone": 8,
+                    "wood": 10,
+                    "iron": 5,
+                    "coin": 5
+                },
+                "miningTime": 120
+            },
+            "lvl2": {
+                "cost": {
+                    "iron": 4,
+                    "stone": 4
+                },
+                "miningTime": 100
+            },
+            "lvl3": {
+                "cost": {
+                    "iron": 3,
+                    "stone": 2
+                },
+                "miningTime": 80
+            },
+            "output": 6
+        }
+    }
+}
