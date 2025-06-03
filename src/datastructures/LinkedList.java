@@ -25,11 +25,11 @@ public class LinkedList<T> {
     }
 
     public void addNode(T data) {
-        addNode(data, length - 1);
+        addNode(data, length);
     }
 
     public void addNode(T data, int place) throws IndexOutOfBoundsException {
-        if (place >= this.length)
+        if (place < 0 || place > this.length)
             throw new IndexOutOfBoundsException();
 
         Node perviousNode = this.headNode;
@@ -50,7 +50,7 @@ public class LinkedList<T> {
     }
 
     public T getNode(int place) throws IndexOutOfBoundsException {
-        if (place > this.length)
+        if (place < 0 || place >= this.length)
             throw new IndexOutOfBoundsException();
 
         Node currentNode = this.headNode.link;
@@ -68,7 +68,7 @@ public class LinkedList<T> {
     }
 
     public void deleteNode(int place) throws IndexOutOfBoundsException {
-        if (place >= this.length)
+        if (place < 0 || place >= this.length)
             throw new IndexOutOfBoundsException();
 
         Node perviousNode = this.headNode;
@@ -89,7 +89,7 @@ public class LinkedList<T> {
         Node currentNode = this.headNode.link;
 
         while (currentNode != null) {
-            if (currentNode.data == data) {
+            if (currentNode.data.equals(data)) {
                 perviousNode.link = currentNode.link;
                 currentNode.link = null;
                 this.length--;
@@ -100,7 +100,18 @@ public class LinkedList<T> {
         }
     }
 
-    public int isInList(T data) {
+    public void changeNode(int place, T newData) throws IndexOutOfBoundsException {
+        if (place < 0 || place >= this.length)
+            throw new IndexOutOfBoundsException();
+
+        Node currentNode = this.headNode.link;
+        for (int i = 0; i < place; i++) {
+            currentNode = currentNode.link;
+        }
+        currentNode.data = newData;
+    }
+
+    public int contains(T data) {
         Node currentNode = this.headNode.link;
         int count = 0;
 
