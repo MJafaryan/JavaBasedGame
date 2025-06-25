@@ -11,6 +11,7 @@ public class Main extends JFrame {
 
         add(new Board());
 
+
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd = ge.getDefaultScreenDevice();
         if (gd.isFullScreenSupported()) {
