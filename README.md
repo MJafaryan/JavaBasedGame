@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Getting started
 Why this project started!? Because we're forced to do it to get 4 points from 22 points :)
 
