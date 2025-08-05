@@ -2,8 +2,8 @@ package datastructures;
 
 import java.io.Serializable;
 
-public class HashMap<T> implements Serializable {
-    private class Node implements Serializable {
+public class HashMap<T> implements Serializable{
+    private class Node {
         public String key;
         public T value;
 
