@@ -18,6 +18,7 @@ public class Colony extends Thread implements Serializable, Basics {
     private User owner;
     private String breed;
     private int balance;
+    private int timeCoefficient;
     private int storageCapacity;
     private HashMap<Integer> resources;
     private HashMap<Integer> incomes;
@@ -35,6 +36,7 @@ public class Colony extends Thread implements Serializable, Basics {
         this.breed = breed;
         this.balance = balance;
         this.storageCapacity = storageCapacity;
+        this.timeCoefficient = 1;
 
         this.resources = new HashMap<>();
         this.incomes = new HashMap<>();
@@ -55,8 +57,16 @@ public class Colony extends Thread implements Serializable, Basics {
             this.storageCapacity = colony.getStorageCapacity();
             this.resources = colony.getResources();
             this.incomes = colony.getIncomes();
+            this.timeCoefficient = 1;
         } else {
             throw new IllegalArgumentException("Username or password is incorrect.");
+        }
+    }
+
+    public void updateIncomeAmount(String materialName, int amount) {
+        if (Arrays.asList(MATERIALS_NAME).contains(materialName)) {
+            int currentAmount = this.incomes.get(materialName);
+            this.incomes.put(materialName, currentAmount + amount);
         }
     }
 
@@ -99,7 +109,6 @@ public class Colony extends Thread implements Serializable, Basics {
     }
 }
 
-
     public int getUsedCapacity() {
         int usedCapacity = 0;
         for (String resource : MATERIALS_NAME) {
@@ -140,6 +149,10 @@ public class Colony extends Thread implements Serializable, Basics {
         return incomes;
     }
 
+    public void setTimeCoefficient(int timeCoefficient) {
+        this.timeCoefficient = timeCoefficient;
+    }
+
     public void stopThread() {
         this.threadRunning = false;
     }
@@ -150,7 +163,7 @@ public class Colony extends Thread implements Serializable, Basics {
             updateAllMaterialsCount();
             save();
             try {
-                Thread.sleep(BASE_TIME_PERIOD);
+                Thread.sleep(BASE_TIME_PERIOD / this.timeCoefficient);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

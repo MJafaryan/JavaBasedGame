@@ -8,4 +8,5 @@ public interface Basics {
     public String[] MATERIALS_NAME = {"food", "gold", "iron", "stone", "wood"};
 
     public int BASE_TIME_PERIOD = 60000;
+    public int[] TIME_COEFFICIENTS = {1, 2, 4};
 }
