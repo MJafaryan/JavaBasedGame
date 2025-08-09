@@ -1,14 +1,22 @@
 package models.buildings;
 
-import java.io.File;
+import models.user.Colony;
 
 public abstract class Building {
-    private int health;
-    private File image;
-    // TODO: deploy this by map logic
-    
+    protected int health;
+    protected Colony colony;
+
+    public Building(int health, Colony colony) { // TODO: deploy map logic
+        this.health = health;
+        this.colony = colony;
+    }
+
     public int getHealth() {
         return health;
+    }
+
+    public Colony getColony() {
+        return colony;
     }
 
     public void takeDamage(int damage) {

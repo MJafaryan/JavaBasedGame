@@ -1,0 +1,180 @@
+{
+	"person": {
+		"foodPer60Sec": 1
+	},
+	"military": {
+		"foodPer60Sec": 1.5,
+		"iranian": {
+			"infantry": {
+				"price": {
+					"coin": 13,
+					"iron": 5
+				},
+				"health": 100,
+				"power": 20
+			},
+			"archer": {
+				"price": {
+					"coin": 18
+				},
+				"health": 120,
+				"power": 28,
+				"range": 4
+			},
+			"cavalry": {
+				"price": {
+					"coin": 25,
+					"iron": 8
+				},
+				"health": 250,
+				"power": 35
+			},
+			"wizard": {
+				"price": {
+					"coin": 25,
+					"wood": 10
+				},
+				"health": 90,
+				"power": 40,
+				"ability": "heal",
+				"mana": 12
+			},
+			"hero": {
+				"name": "rostam",
+				"health": 350,
+				"power": 50
+			}
+		},
+		"arabian": {
+			"infantry": {
+				"price": {
+					"coin": 13,
+					"iron": 5
+				},
+				"health": 110,
+				"power": 21
+			},
+			"archer": {
+				"price": {
+					"coin": 18
+				},
+				"health": 130,
+				"power": 30,
+				"range": 6
+			},
+			"cavalry": {
+				"price": {
+					"coin": 25,
+					"iron": 8
+				},
+				"health": 230,
+				"power": 33
+			},
+			"wizard": {
+				"price": {
+					"coin": 25,
+					"wood": 10
+				},
+				"health": 90,
+				"power": 40,
+				"ability": "fire",
+				"mana": 19
+			},
+			"hero": {
+				"name": "salahdin",
+				"health": 365,
+				"power": 55
+			}
+		},
+		"mongolian": {
+			"infantry": {
+				"price": {
+					"coin": 13,
+					"iron": 5
+				},
+				"health": 95,
+				"power": 18
+			},
+			"archer": {
+				"price": {
+					"coin": 18
+				},
+				"health": 110,
+				"power": 32,
+				"range": 7
+			},
+			"cavalry": {
+				"price": {
+					"coin": 25,
+					"iron": 10
+				},
+				"health": 275,
+				"power": 38
+			},
+			"wizard": {
+				"price": {
+					"coin": 25,
+					"wood": 10
+				},
+				"health": 75,
+				"power": 45,
+				"ability": "spawn",
+				"mana": 18
+			},
+			"hero": {
+				"name": "kublai",
+				"health": 390,
+				"power": 60,
+				"range": 10
+			}
+		},
+		"romans": {
+			"infantry": {
+				"price": {
+					"coin": 13,
+					"iron": 5
+				},
+				"health": 120,
+				"power": 22
+			},
+			"archer": {
+				"price": {
+					"coin": 18
+				},
+				"health": 115,
+				"power": 26,
+				"range": 5
+			},
+			"cavalry": {
+				"price": {
+					"coin": 25,
+					"iron": 8
+				},
+				"health": 260,
+				"power": 36
+			},
+			"wizard": {
+				"price": {
+					"coin": 25,
+					"wood": 10
+				},
+				"health": 95,
+				"power": 42,
+				"ability": "lightning",
+				"mana": 17
+			},
+			"hero": {
+				"name": "julius",
+				"health": 375,
+				"power": 55
+			}
+		},
+		"spy": {
+			"price": {
+				"coin": 30
+			},
+			"gettingEnemyInfoChance": 0.6,
+			"findingSecreteCastleChance": 0.3
+		}
+	}
+}

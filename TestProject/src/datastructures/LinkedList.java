@@ -3,7 +3,7 @@ package datastructures;
 import java.io.Serializable;
 
 public class LinkedList<T> implements Serializable {
-    private class Node implements Serializable {
+    private class Node {
         public T data;
         public Node link;
 
