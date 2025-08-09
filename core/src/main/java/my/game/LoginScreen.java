@@ -1,6 +1,7 @@
 package my.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -22,8 +23,38 @@ public class LoginScreen implements Screen {
     private final Stage stage;
     private final BitmapFont font;
 
+    private boolean debugMode = true; // حالت دیباگ (true = نمایش مستطیل دکمه‌ها)
+
     private TextField usernameField;
     private TextField passwordField;
+
+    int width = Gdx.graphics.getWidth();
+    int height = Gdx.graphics.getHeight();
+
+    private int registerButtonX = (int) (width * 0.423);
+    private int registerButtonY = (int) (height * 0.038);
+    private int registerButtonWidth = (int) (width * 0.084);
+    private int registerButtonHeight = (int) (height * 0.056);
+
+    private int exitButtonX = (int) (width * 0.9736);
+    private int exitButtonY = (int) (height * 0.9627);
+    private int exitButtonWidth = (int) (width * 0.0245);
+    private int exitButtonHeight = (int) (width * 0.0245);
+
+    private int usernameFieldX = (int) (width * 0.30625);
+    private int usernameFieldY = (int) (height * 0.369);
+    private int usernameFieldWidth = (int) (width * 0.314);
+    private int usernameFieldHeight = (int) (height * 0.0722);
+
+    private int passwordFieldX = (int) (width * 0.30625);
+    private int passwordFieldY = (int) (height * 0.23);
+    private int passwordFieldWidth = (int) (width * 0.314);
+    private int passwordFieldHeight = (int) (height * 0.0722);
+
+    private int loginToGameButtonX = (int) (width * 0.3058);
+    private int loginToGameButtonY = (int) (height * 0.1136);
+    private int loginToGameButtonWidth = (int) (width * 0.3145);
+    private int loginToGameButtonHeight = (int) (height * 0.0911);
 
     public LoginScreen(MyGame game) {
         this.game = game;
@@ -46,13 +77,13 @@ public class LoginScreen implements Screen {
 
         // فیلد نام کاربری
         usernameField = new TextField("", textFieldStyle);
-        usernameField.setPosition(580, 400);
-        usernameField.setSize(620, 77);
+        usernameField.setPosition(usernameFieldX, usernameFieldY);
+        usernameField.setSize(usernameFieldWidth, usernameFieldHeight);
 
         // فیلد رمز عبور
         passwordField = new TextField("", textFieldStyle);
-        passwordField.setPosition(580, 250);
-        passwordField.setSize(620, 77);
+        passwordField.setPosition(passwordFieldX, passwordFieldY);
+        passwordField.setSize(passwordFieldWidth, passwordFieldHeight);
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
 
@@ -68,44 +99,91 @@ public class LoginScreen implements Screen {
 
         // رسم پس‌زمینه
         batch.begin();
-        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(background, 0, 0, width, height);
         batch.end();
 
         // به روزرسانی و رسم Stage
-        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
 
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
-        shapeRenderer.begin(ShapeType.Line);
-        shapeRenderer.setColor(Color.BLACK);
-        shapeRenderer.rect(810 , 45 , 165 , 60);
-        shapeRenderer.end();
+        // shapeRenderer.begin(ShapeType.Line);
+        // shapeRenderer.setColor(Color.BLACK);
+        // shapeRenderer.rect(810, 45, 165, 60);
+        // shapeRenderer.end();
+
+        if (debugMode) {
+            shapeRenderer.begin(ShapeType.Line);
+            shapeRenderer.setColor(Color.RED);
+
+            shapeRenderer.rect(
+                    registerButtonX, registerButtonY,
+                    registerButtonWidth, registerButtonHeight);
+
+            shapeRenderer.rect(
+                    exitButtonX, exitButtonY,
+                    exitButtonWidth, exitButtonHeight);
+
+            shapeRenderer.rect(
+                    usernameFieldX, usernameFieldY,
+                    usernameFieldWidth, usernameFieldHeight);
+
+            shapeRenderer.rect(
+                    passwordFieldX, passwordFieldY,
+                    passwordFieldWidth, passwordFieldHeight);
+
+            shapeRenderer.rect(
+                    loginToGameButtonX, loginToGameButtonY,
+                    loginToGameButtonWidth, loginToGameButtonHeight);
+
+            shapeRenderer.end();
+        }
+
         // مدیریت کلیک روی دکمه خروج
         if (Gdx.input.justTouched()) {
             int touchX = Gdx.input.getX();
-            int touchY = Gdx.graphics.getHeight() - Gdx.input.getY();
+            int touchY = height - Gdx.input.getY();
+            Gdx.app.log("DEBUG", "کلیک در: X=" + touchX + ", Y=" + touchY);
 
-            if (touchX >= 580 && touchX <= 580 + 600 && touchY >= 200 && touchY <= 200 + 77) {
+            if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.CONTROL_LEFT) &&
+                    Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.D)) {
+                debugMode = !debugMode;
+                Gdx.app.log("DEBUG", "حالت دیباگ: " + debugMode);
+            }
+
+            if (touchX >= loginToGameButtonX && touchX <= loginToGameButtonX + loginToGameButtonWidth
+                    && touchY >= loginToGameButtonY && touchY <= loginToGameButtonY + loginToGameButtonHeight) {
                 game.setScreen(new GameScreen(game));
             }
 
-            if (touchX >= 810 && touchY >= 45 && touchX <= 165 + 810 && touchY <= 60 +45) {
+            if (touchX >= registerButtonX && touchY >= registerButtonY
+                    && touchX <= registerButtonX + registerButtonWidth
+                    && touchY <= registerButtonY + registerButtonHeight) {
                 game.setScreen(new RegisterScreen(game));
-                Gdx.app.log("Login" , "click in register");
+                Gdx.app.log("Login", "click in register");
                 dispose();
 
             }
             // مختصات دکمه خروج (تنظیم بر اساس نیاز شما)
-            if (touchX >= Gdx.graphics.getWidth() - 100 && touchX <= Gdx.graphics.getWidth() &&
-                touchY >= Gdx.graphics.getHeight() - 100 && touchY <= Gdx.graphics.getHeight()) {
+            if (touchX >= exitButtonX && touchX <= exitButtonX + exitButtonWidth &&
+                    touchY >= exitButtonY && touchY <= exitButtonY + exitButtonHeight) {
                 Gdx.app.exit();
             }
         }
     }
 
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.D && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+            debugMode = !debugMode;
+            Gdx.app.log("DEBUG", "Debug mode: " + debugMode);
+            return true;
+        }
+        return false;
+    }
+
     @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+    public void resize(int w, int h) {
+        stage.getViewport().update(w, h, true);
     }
 
     @Override

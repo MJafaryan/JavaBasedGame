@@ -53,7 +53,7 @@ public class MenuScreen implements Screen {
 
         // رسم تصویر پس‌زمینه
         batch.begin();
-        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(background, 0, 0, width, height);
         batch.end();
 
         // نمایش مستطیل دکمه‌ها در حالت دیباگ
@@ -61,7 +61,7 @@ public class MenuScreen implements Screen {
         // بررسی کلیک‌ها
         if (Gdx.input.justTouched()) {
             int touchX = Gdx.input.getX();
-            int touchY = Gdx.graphics.getHeight() - Gdx.input.getY();
+            int touchY = height - Gdx.input.getY();
 
 
             // کلیک روی دکمه Play
