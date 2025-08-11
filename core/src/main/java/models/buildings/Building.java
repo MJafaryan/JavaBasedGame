@@ -11,6 +11,10 @@ public abstract class Building {
         this.colony = colony;
     }
 
+    public Building(Colony colony) {
+        this.colony = colony;
+    }
+
     public int getHealth() {
         return health;
     }
