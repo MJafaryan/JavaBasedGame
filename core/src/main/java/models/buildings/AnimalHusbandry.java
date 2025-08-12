@@ -10,12 +10,15 @@ import models.user.Colony;
 
 public class AnimalHusbandry extends Building implements Upgradable {
     private int lvl;
-    JSONObject cost = SimplerJson.readJson(String.format("%sconfigs/building-config.json",
-            Basics.DATA_DIR));
+    private static JSONObject config;
+
+    static {
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
+    }
 
     public AnimalHusbandry(Colony colony) {
         super(colony);
-        this.health = (int) (long) SimplerJson.getDataFromJson(cost, "farms_animalHusbandry_health");
+        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
     }
 
@@ -23,7 +26,7 @@ public class AnimalHusbandry extends Building implements Upgradable {
         JSONObject newlvl = null;
 
         if (lvl < 3) {
-            newlvl = (JSONObject) SimplerJson.getDataFromJson(this.cost, "farms_animalHusbandry_lvl" + (this.lvl + 1));
+            newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
         HashMap<Integer> requieredMaterials = new HashMap<>();
@@ -32,6 +35,7 @@ public class AnimalHusbandry extends Building implements Upgradable {
             requieredMaterials.put(material,
                     (int) (long) SimplerJson.getDataFromJson(newlvl, "cost_" + material));
         }
+
         for (String material : Basics.MATERIALS_NAME) {
             if (requieredMaterials.get(material) != null
                     && requieredMaterials.get(material) > colony.getResources().get(material)) {
@@ -51,5 +55,4 @@ public class AnimalHusbandry extends Building implements Upgradable {
         // this.colony.setStorageCapacity((int) (long)
         // SimplerJson.getDataFromJson(newlvl, "capacity"));
     }
-
 }

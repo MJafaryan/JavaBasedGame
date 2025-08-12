@@ -10,12 +10,15 @@ import models.user.Colony;
 
 public class IronMine extends Building implements Upgradable {
     private int lvl;
-    JSONObject cost = SimplerJson.readJson(String.format("%sconfigs/building-config.json",
-            Basics.DATA_DIR));
+    private static JSONObject config;
+
+    static {
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_ironMine");
+    }
 
     public IronMine(Colony colony) {
         super(colony);
-        this.health = (int) (long) SimplerJson.getDataFromJson(cost, "farms_ironMine_health");
+        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
     }
 
@@ -23,7 +26,7 @@ public class IronMine extends Building implements Upgradable {
         JSONObject newlvl = null;
 
         if (lvl < 3) {
-            newlvl = (JSONObject) SimplerJson.getDataFromJson(this.cost, "farms_ironMine_lvl" + (this.lvl + 1));
+            newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
         HashMap<Integer> requieredMaterials = new HashMap<>();
