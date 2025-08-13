@@ -12,6 +12,7 @@ import models.buildings.Building;
 
 public class Colony implements Serializable {
     private final static String SAVING_DIR = String.format("%s%s/", Basics.DATA_DIR, "saves");
+    private int timeCoefficient;
 
     // The global info of a colony
     private String name;
@@ -56,11 +57,14 @@ public class Colony implements Serializable {
         this.workersPopulation = 0;
         this.militariesPopulation = 0;
         this.militaries = new HashMap<>();
+        this.timeCoefficient = 1;
 
         for (String material : Basics.MATERIALS_NAME) {
             this.resources.put(material, 0);
             this.incomes.put(material, 0);
         }
+
+        this.resources.delete("coin");
 
         for (String unit : Basics.UNITS_NAME) {
             this.militaries.put(unit, 0);
@@ -90,6 +94,7 @@ public class Colony implements Serializable {
             this.workersPopulation = colony.getWorkersPopulation();
             this.militariesPopulation = colony.getMilitariesPopulation();
             this.militaries = colony.getMilitaries();
+            this.timeCoefficient = colony.getTimeCoefficient();
         }
     }
 
@@ -171,10 +176,14 @@ public class Colony implements Serializable {
         return this.militaries;
     }
 
+    public int getTimeCoefficient() {
+        return this.timeCoefficient;
+    }
+
     // Special getters
     public int getUsedCapacity() {
         int usedCapacity = 0;
-        for (String material : Basics.MATERIALS_NAME) {
+        for (String material : Basics.WAREHOUSE) {
             usedCapacity += this.resources.get(material);
         }
         return usedCapacity;
@@ -211,7 +220,7 @@ public class Colony implements Serializable {
 
     // Special setters
     public void setResource(String material, int amount) throws IllegalArgumentException {
-        if (!Basics.exists(Basics.MATERIALS_NAME, material)) {
+        if (!Basics.exists(Basics.WAREHOUSE, material)) {
             throw new IllegalArgumentException("Invalid material: " + material);
         }
         this.resources.put(material, amount);
@@ -229,5 +238,23 @@ public class Colony implements Serializable {
             throw new IllegalArgumentException("Invalid military type: " + type);
         }
         this.militaries.put(type, amount);
+    }
+
+    // Other functions
+    public synchronized void updateResourceAmount(String resourceName, int amount)
+            throws IllegalArgumentException {
+        if (!resourceName.equals("coin")) {
+            if (amount > 0 && amount > this.storageCapacity - getUsedCapacity()) {
+                this.resources.put(resourceName, this.storageCapacity - getUsedCapacity());
+            } else if (amount < 0 && Math.abs(amount) > this.resources.get(resourceName)) {
+                throw new IllegalArgumentException("Insufficient resources: " + resourceName);
+            } else {
+                this.resources.put(resourceName, this.resources.get(resourceName) + amount);
+            }
+        } else if (amount < 0 && Math.abs(amount) > this.balance) {
+            throw new IllegalArgumentException("Insufficient balance");
+        } else {
+            this.balance += amount;
+        }
     }
 }

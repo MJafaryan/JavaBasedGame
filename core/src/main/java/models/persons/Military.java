@@ -1,16 +1,18 @@
 package models.persons;
 
 import models.buildings.Building;
+import models.buildings.House;
+import models.user.Colony;
 
 public abstract class Military extends Person {
     private int health;
     private int attackPower;
 
-    // public Military(int health, int attackPower, int foodUsage, Object home) {
-        // super(foodUsage, home);
-        // this.health = health;
-        // this.attackPower = attackPower;
-    // }
+    public Military(Colony colony, House house, int health, int attackPower) {
+        super(colony, house);
+        this.health = health;
+        this.attackPower = attackPower;
+    }
 
     public int getHealth() {
         return health;

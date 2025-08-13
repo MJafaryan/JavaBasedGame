@@ -1,31 +1,29 @@
 package models.persons;
 
-public class Person extends Thread {
-    // private Object home; TODO: deploy home
-    private int foodUsage;
+import models.buildings.House;
+import models.user.Colony;
+import java.util.UUID;
 
-    // public Person(int foodUsage, Object home) {
-    //     this.foodUsage = foodUsage;
-    //     this.home = home;
-    // }
+public abstract class Person {
+    private UUID id;
+    private House house;
+    private Colony colony;
 
-    protected void useFood() {
-        // TODO: decrease town food by foodUsage
+    public Person(Colony colony, House house) {
+        this.house = house;
+        this.colony = colony;
+        this.id = UUID.randomUUID();
     }
 
-    public void close() {
-        interrupt();
+    public Colony getColony() {
+        return colony;
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            useFood();
-            try {
-                Thread.sleep(60);
-            } catch (Exception e) {
-                System.err.println("Something was wrong...");
-            }
-        }
+    public House getHouse() {
+        return this.house;
+    }
+
+    public UUID getID() {
+        return this.id;
     }
 }
