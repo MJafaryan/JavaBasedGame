@@ -189,6 +189,14 @@ public class Colony implements Serializable {
         return usedCapacity;
     }
 
+    public int getMaterial(String materialName) {
+        if (materialName.equals("coin")) {
+            return this.balance;
+        } else {
+            return this.resources.get(materialName);
+        }
+    }
+
     // Setters
     public void setStorageCapacity(int storageCapacity) {
         this.storageCapacity = storageCapacity;

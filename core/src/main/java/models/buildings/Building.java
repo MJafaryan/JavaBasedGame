@@ -4,8 +4,10 @@ import models.Basics;
 import models.user.Colony;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
+import java.util.UUID;
 
 public abstract class Building {
+    protected UUID id;
     protected int health;
     protected Colony colony;
     protected static JSONObject configFile;
@@ -16,6 +18,7 @@ public abstract class Building {
     }
 
     public Building(int health, Colony colony) { // TODO: deploy map logic
+        this.id = UUID.randomUUID();
         this.health = health;
         this.colony = colony;
     }
@@ -30,6 +33,10 @@ public abstract class Building {
 
     public Colony getColony() {
         return colony;
+    }
+
+    public UUID getID() {
+        return this.id;
     }
 
     public void takeDamage(int damage) {

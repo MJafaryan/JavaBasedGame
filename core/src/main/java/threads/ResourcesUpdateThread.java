@@ -25,7 +25,7 @@ public class ResourcesUpdateThread extends Thread {
     public void run() {
         while (true) {
             updateAllResourceAmount();
-            this.colony.updateResourceAmount("food", colony.getUsingFoodByNPCs());
+            this.colony.updateResourceAmount("food", colony.getUsingFoodByNPCs()  * (-1));
             try {
                 Thread.sleep(Basics.BASE_TIME_PERIOD / colony.getTimeCoefficient());
             } catch (InterruptedException e) {
