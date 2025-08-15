@@ -50,8 +50,7 @@
       "wood": 8,
       "coin": 10
     },
-    "capacity": 6,
-    "capacityIncreaseTime": 60
+    "capacity": 6
   },
   "market": {
     "health": 650,
