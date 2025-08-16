@@ -3,6 +3,8 @@ package models.buildings;
 import models.Basics;
 import models.user.Colony;
 import org.json.simple.JSONObject;
+
+import datastructures.HashMap;
 import datastructures.SimplerJson;
 import java.util.UUID;
 
@@ -41,5 +43,30 @@ public abstract class Building {
 
     public void takeDamage(int damage) {
         health -= damage;
+    }
+
+    public void payCost(JSONObject costsJSON) throws Exception {
+        HashMap<Integer> requiredMaterials = new HashMap<>();
+
+                for (String material : Basics.MATERIALS_NAME) {
+            if (SimplerJson.getDataFromJson(costsJSON, material) != null) {
+                requiredMaterials.put(material,
+                        (int) (long) SimplerJson.getDataFromJson(costsJSON, material));
+            }
+        }
+
+        for (String material : Basics.MATERIALS_NAME) {
+            if (requiredMaterials.get(material) != null
+                    && requiredMaterials.get(material) > this.colony.getMaterial(material)) {
+                throw new Exception("No enough " + material);
+            }
+        }
+
+        for (String material : Basics.MATERIALS_NAME) {
+            if (requiredMaterials.get(material) != null) {
+                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
+            }
+        }
+
     }
 }

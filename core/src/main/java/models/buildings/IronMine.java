@@ -1,9 +1,7 @@
 package models.buildings;
 
-import datastructures.HashMap;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
-import models.Basics;
 import models.user.Colony;
 
 public class IronMine extends Building implements Upgradable {
@@ -16,28 +14,8 @@ public class IronMine extends Building implements Upgradable {
 
     public IronMine(Colony colony) throws Exception {
         super(colony);
-        HashMap<Integer> requiredMaterials = new HashMap<>();
 
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(config, "lvl1_cost_" + material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(config, "lvl1_cost_" + material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > this.colony.getMaterial(material)) {
-                System.out.println(material + ": " + this.colony.getMaterial(material));
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
+        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
@@ -52,27 +30,7 @@ public class IronMine extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        HashMap<Integer> requiredMaterials = new HashMap<>();
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(newlvl, "cost_" + material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(newlvl, "cost_" + material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > colony.getMaterial(material)) {
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
+        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
 
         // Set Changes:
         this.lvl++;

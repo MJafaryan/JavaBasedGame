@@ -1,10 +1,8 @@
 package models.buildings;
 
-import datastructures.HashMap;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import org.json.simple.JSONArray;
-import models.Basics;
 import models.user.Colony;
 
 public class Barracks extends Building implements Upgradable {
@@ -18,28 +16,8 @@ public class Barracks extends Building implements Upgradable {
 
     public Barracks(Colony colony) throws Exception {
         super(colony);
-        HashMap<Integer> requiredMaterials = new HashMap<>();
 
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(config, "lvl1_cost_" + material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(config, "lvl1_cost_" + material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > this.colony.getMaterial(material)) {
-                System.out.println(material + ": " + this.colony.getMaterial(material));
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
+        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
@@ -53,27 +31,7 @@ public class Barracks extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        HashMap<Integer> requiredMaterials = new HashMap<>();
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(newlvl, "cost_" + material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(newlvl, "cost_" + material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > colony.getMaterial(material)) {
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
+        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "cost"));
 
         // Set Changes:
         this.lvl = 2;
@@ -83,4 +41,29 @@ public class Barracks extends Building implements Upgradable {
     public JSONArray getUnavailableUnits() {
         return this.unavailableUnits;
     }
+
+    // public static void main(String[] args) {
+    //     User user = new User("test", "123");
+    //     Colony colony = new Colony("test", user, "tester", 300, 500);
+    //     colony.updateResourceAmount("wood", 100);
+    //     colony.updateResourceAmount("stone", 100);
+
+    //     System.out.println("coin: " + colony.getBalance());
+    //     System.out.println("wood: " + colony.getMaterial("wood"));
+    //     System.out.println("stone: " + colony.getMaterial("stone"));
+    //     Barracks barracks;
+    //     try {
+    //         barracks = new Barracks(colony);
+    //         System.out.println("coin: " + colony.getBalance());
+    //         System.out.println("wood: " + colony.getMaterial("wood"));
+    //         System.out.println("stone: " + colony.getMaterial("stone"));
+
+    //         barracks.upgrade();
+    //         System.out.println("coin: " + colony.getBalance());
+    //         System.out.println("wood: " + colony.getMaterial("wood"));
+    //         System.out.println("stone: " + colony.getMaterial("stone"));
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    // }
 }

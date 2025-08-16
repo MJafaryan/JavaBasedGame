@@ -1,9 +1,7 @@
 package models.buildings;
 
-import datastructures.HashMap;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
-import models.Basics;
 import models.user.Colony;
 
 public class TownHall extends Building implements Upgradable {
@@ -28,27 +26,7 @@ public class TownHall extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        HashMap<Integer> requiredMaterials = new HashMap<>();
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(newlvl, "upgradeCost_" + material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(newlvl, "upgradeCost_" + material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > colony.getMaterial(material)) {
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
+        payCost((JSONObject) SimplerJson.getDataFromJson(config, "upgradeCost"));
 
         // Set Changes:
         this.lvl++;
