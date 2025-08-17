@@ -197,6 +197,10 @@ public class Colony implements Serializable {
         }
     }
 
+    public Building getBuilding(String id) {
+        return this.buildings.get(id);
+    }
+
     // Setters
     public void setStorageCapacity(int storageCapacity) {
         this.storageCapacity = storageCapacity;
@@ -264,5 +268,9 @@ public class Colony implements Serializable {
         } else {
             this.balance += amount;
         }
+    }
+
+    public synchronized void addBuilding(Building newBuilding) {
+        this.buildings.put(newBuilding.getID().toString(), newBuilding);
     }
 }

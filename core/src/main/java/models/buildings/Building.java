@@ -3,7 +3,6 @@ package models.buildings;
 import models.Basics;
 import models.user.Colony;
 import org.json.simple.JSONObject;
-
 import datastructures.HashMap;
 import datastructures.SimplerJson;
 import java.util.UUID;
@@ -16,13 +15,14 @@ public abstract class Building {
 
     static {
         configFile = SimplerJson.readJson(String.format("%sconfigs/building-config.json",
-            Basics.DATA_DIR));
+                Basics.DATA_DIR));
     }
 
     public Building(int health, Colony colony) { // TODO: deploy map logic
         this.id = UUID.randomUUID();
         this.health = health;
         this.colony = colony;
+        this.colony.addBuilding(this);
     }
 
     public Building(Colony colony) {
@@ -48,7 +48,7 @@ public abstract class Building {
     public void payCost(JSONObject costsJSON) throws Exception {
         HashMap<Integer> requiredMaterials = new HashMap<>();
 
-                for (String material : Basics.MATERIALS_NAME) {
+        for (String material : Basics.MATERIALS_NAME) {
             if (SimplerJson.getDataFromJson(costsJSON, material) != null) {
                 requiredMaterials.put(material,
                         (int) (long) SimplerJson.getDataFromJson(costsJSON, material));
@@ -67,6 +67,5 @@ public abstract class Building {
                 this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
             }
         }
-
     }
 }
