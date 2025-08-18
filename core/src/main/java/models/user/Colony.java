@@ -28,6 +28,7 @@ public class Colony implements Serializable {
 
     // Buildings
     private HashMap<Building> buildings;
+    private HashMap<String> importantBuildingsCode;
 
     // NPCs
     private int maximumPossiblePopulation;
@@ -52,6 +53,7 @@ public class Colony implements Serializable {
         this.incomes = new HashMap<>();
         this.usingFoodByNPCs = 0;
         this.buildings = new HashMap<>();
+        this.importantBuildingsCode = new HashMap<>();
         this.maximumPossiblePopulation = 0;
         this.population = 0;
         this.workersPopulation = 0;
@@ -89,6 +91,7 @@ public class Colony implements Serializable {
             this.incomes = colony.getIncomes();
             this.usingFoodByNPCs = colony.getUsingFoodByNPCs();
             this.buildings = colony.getBuildings();
+            this.importantBuildingsCode = colony.getImportantBuildingsCode();
             this.maximumPossiblePopulation = colony.getMaximumPossiblePopulation();
             this.population = colony.getPopulation();
             this.workersPopulation = colony.getWorkersPopulation();
@@ -180,6 +183,10 @@ public class Colony implements Serializable {
         return this.timeCoefficient;
     }
 
+    public HashMap<String> getImportantBuildingsCode() {
+        return this.importantBuildingsCode;
+    }
+
     // Special getters
     public int getUsedCapacity() {
         int usedCapacity = 0;
@@ -228,6 +235,10 @@ public class Colony implements Serializable {
 
     public void setMilitariesPopulation(int militariesPopulation) {
         this.militariesPopulation = militariesPopulation;
+    }
+
+    public void setImportantBuildingsCode(HashMap<String> newHashMap) {
+        this.importantBuildingsCode = newHashMap;
     }
 
     // Special setters
