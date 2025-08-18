@@ -18,8 +18,7 @@
 					"coin": 18
 				},
 				"health": 120,
-				"power": 28,
-				"range": 4
+				"power": 28
 			},
 			"cavalry": {
 				"price": {
@@ -59,8 +58,7 @@
 					"coin": 18
 				},
 				"health": 130,
-				"power": 30,
-				"range": 6
+				"power": 30
 			},
 			"cavalry": {
 				"price": {
@@ -100,8 +98,7 @@
 					"coin": 18
 				},
 				"health": 110,
-				"power": 32,
-				"range": 7
+				"power": 32
 			},
 			"cavalry": {
 				"price": {
@@ -124,8 +121,7 @@
 			"hero": {
 				"name": "kublai",
 				"health": 390,
-				"power": 60,
-				"range": 10
+				"power": 60
 			}
 		},
 		"romans": {
@@ -142,8 +138,7 @@
 					"coin": 18
 				},
 				"health": 115,
-				"power": 26,
-				"range": 5
+				"power": 26
 			},
 			"cavalry": {
 				"price": {
