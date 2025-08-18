@@ -3,13 +3,14 @@ package models.buildings;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
+import models.user.User;
 
 public class Lumbering extends Building implements Upgradable {
     private int lvl;
     private static JSONObject config;
 
     static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_lumbering");
     }
 
     public Lumbering(Colony colony) throws Exception {
@@ -30,7 +31,7 @@ public class Lumbering extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
+        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "cost"));
 
         // Set Changes:
         this.lvl++;
