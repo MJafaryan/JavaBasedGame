@@ -58,4 +58,12 @@ public class HashMap<T> implements Serializable {
         Node deletingNode = new Node(key);
         nodesList.deleteNode(deletingNode);
     }
+
+    public String[] getKeys() {
+        String[] keys = new String[nodesList.getLength()];
+        for (int i = 0; i < nodesList.getLength(); i++) {
+            keys[i] = nodesList.getNode(i).key;
+        }
+        return keys;
+    }
 }
