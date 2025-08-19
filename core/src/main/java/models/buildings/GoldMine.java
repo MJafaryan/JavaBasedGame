@@ -1,5 +1,6 @@
 package models.buildings;
 
+import models.user.User;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
@@ -9,7 +10,7 @@ public class GoldMine extends Building implements Upgradable {
     private static JSONObject config;
 
     static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_goldMine");
     }
 
     public GoldMine(Colony colony) throws Exception {
@@ -30,7 +31,7 @@ public class GoldMine extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
+        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "cost"));
 
         // Set Changes:
         this.lvl++;

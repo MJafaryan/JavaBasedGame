@@ -1,5 +1,6 @@
 package models.buildings;
 
+import models.user.User;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
@@ -9,7 +10,7 @@ public class Farm extends Building implements Upgradable {
     private static JSONObject config;
 
     static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_farm");
     }
 
     public Farm(Colony colony) throws Exception {

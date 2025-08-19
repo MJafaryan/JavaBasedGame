@@ -122,7 +122,7 @@
         }
       },
       "fence": {
-        "influentialIn": "Health",
+        "influentialIn": "health",
         "count": 50,
         "cost": {
           "wood": 10,
