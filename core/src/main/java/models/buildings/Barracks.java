@@ -1,5 +1,6 @@
 package models.buildings;
 
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import org.json.simple.JSONArray;
@@ -14,8 +15,8 @@ public class Barracks extends Building implements Upgradable {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "barracks");
     }
 
-    public Barracks(Colony colony) throws Exception {
-        super(colony);
+    public Barracks(Texture texture, int x, int y, int width, int height, String barracks, Colony colony) throws Exception {
+        super(texture , x, y, width, height, barracks, colony);
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 
