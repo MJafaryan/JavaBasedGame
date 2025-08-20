@@ -1,0 +1,55 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Map2.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "Map2.tmx": {
+            "scale": 0.10576666666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 3521.903561298456,
+                "y": 2245.508982035928
+            }
+        },
+        "tsx files/grounds.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tsx files/stone mountain.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tsx files/trees.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "D:/abbasali/Tailed/Map/Map2/tiled sets",
+    "map.height": 15,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 300,
+    "map.tileWidth": 300,
+    "map.width": 15,
+    "openFiles": [
+        "Map2.tmx",
+        "tsx files/grounds.tsx",
+        "tsx files/trees.tsx",
+        "tsx files/stone mountain.tsx"
+    ],
+    "project": "Map2.tiled-project",
+    "recentFiles": [
+        "tsx files/stone mountain.tsx",
+        "tsx files/trees.tsx",
+        "tsx files/grounds.tsx",
+        "Map2.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 300,
+        "width": 300
+    }
+}
