@@ -138,6 +138,18 @@ public class LinkedList<T> implements Serializable {
         return null;
     }
 
+    public T[] getAsArray() {
+        T[] arrayForm = (T[]) new Object[length];
+        int index = 0;
+        Node currentNode = this.headNode.link;
+        while (currentNode != null) {
+            arrayForm[index++] = currentNode.data;
+            currentNode = currentNode.link;
+        }
+
+        return arrayForm;
+    }
+
     public int getLength() {
         return this.length;
     }

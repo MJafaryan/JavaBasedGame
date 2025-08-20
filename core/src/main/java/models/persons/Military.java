@@ -1,10 +1,12 @@
 package models.persons;
 
-import models.buildings.Building;
+import org.json.simple.JSONObject;
+
+import datastructures.SimplerJson;
 import models.buildings.House;
 import models.user.Colony;
 
-public abstract class Military extends Person {
+public class Military extends Person {
     private int health;
     private int attackPower;
 
@@ -22,15 +24,15 @@ public abstract class Military extends Person {
         return attackPower;
     }
 
-    public void attack(Military target) {
-        target.defend(this.attackPower);
-    }
+    // public void attack(Military target) {
+    //     target.defend(this.attackPower);
+    // }
 
-    public void attack(Building target) {
-        target.takeDamage(this.attackPower);
-    }
+    // public void attack(Building target) {
+    //     target.takeDamage(this.attackPower);
+    // }
 
-    public void defend(int attackPower) {
-        this.health -= attackPower;
-    }
+    // public void defend(int attackPower) {
+    //     this.health -= attackPower;
+    // }
 }
