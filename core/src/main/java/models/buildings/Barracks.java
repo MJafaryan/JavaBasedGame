@@ -4,12 +4,11 @@ import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import org.json.simple.JSONArray;
 import models.user.Colony;
-import models.user.User;
 
 public class Barracks extends Building implements Upgradable {
     private int lvl;
     private static JSONObject config;
-    private JSONArray unavailableUnits;
+    private String[] unavailableUnits;
 
     static {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "barracks");
@@ -17,12 +16,20 @@ public class Barracks extends Building implements Upgradable {
 
     public Barracks(Colony colony) throws Exception {
         super(colony);
+        if (colony.getImportantBuildingsCode().get("barracks") != null) {
+            throw new Exception();
+        }
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
-        this.unavailableUnits = (JSONArray) SimplerJson.getDataFromJson(config, "lvl1_unavailableUnits");
+        JSONArray unavailableUnitsJsonArray = (JSONArray) SimplerJson.getDataFromJson(config, "lvl1_unavailableUnits");
+        this.unavailableUnits = new String[unavailableUnitsJsonArray.size()];
+        for (int i = 0; i < unavailableUnitsJsonArray.size(); i++) {
+            this.unavailableUnits[i] = (String) unavailableUnitsJsonArray.get(i);
+        }
+        colony.setImportantBuilding("barracks", this.id.toString());
     }
 
     public void upgrade() throws Exception {
@@ -39,7 +46,7 @@ public class Barracks extends Building implements Upgradable {
         this.unavailableUnits = null;
     }
 
-    public JSONArray getUnavailableUnits() {
+    public String[] getUnavailableUnits() {
         return this.unavailableUnits;
     }
 }

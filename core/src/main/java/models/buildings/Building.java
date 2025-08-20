@@ -19,14 +19,14 @@ public abstract class Building {
     }
 
     public Building(int health, Colony colony) { // TODO: deploy map logic
-        this.id = UUID.randomUUID();
+        this(colony);
         this.health = health;
-        this.colony = colony;
-        this.colony.addBuilding(this);
     }
 
     public Building(Colony colony) {
+        this.id = UUID.randomUUID();
         this.colony = colony;
+        this.colony.addBuilding(this);
     }
 
     public int getHealth() {

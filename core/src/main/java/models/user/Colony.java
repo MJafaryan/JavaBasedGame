@@ -263,6 +263,10 @@ public class Colony implements Serializable {
         this.militaries.put(type, amount);
     }
 
+    public void setImportantBuilding(String name, String key) {
+        this.importantBuildingsCode.put(name, key);
+    }
+
     // Other functions
     public synchronized void updateResourceAmount(String resourceName, int amount)
             throws IllegalArgumentException {
