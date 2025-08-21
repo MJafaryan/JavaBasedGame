@@ -3,6 +3,7 @@ package models.buildings;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
+import models.user.User;
 
 public class TownHall extends Building implements Upgradable {
     private int lvl;
@@ -26,7 +27,7 @@ public class TownHall extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "upgradeCost"));
+        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "upgradeCost"));
 
         // Set Changes:
         this.lvl++;
