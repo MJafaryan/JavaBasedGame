@@ -1,5 +1,6 @@
 package models.buildings;
 
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 
 import datastructures.SimplerJson;
@@ -18,8 +19,8 @@ public class Tower extends Building {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "tower");
     }
 
-    public Tower(Colony colony) throws Exception {
-        super(colony);
+    public Tower(Texture textrue , int x , int y , int height , int weigth , String type , Colony colony) throws Exception {
+        super(textrue , x , y ,height , weigth , "tower" , colony);
         this.attachments = (JSONObject) SimplerJson.getDataFromJson(config, "attachments");
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));

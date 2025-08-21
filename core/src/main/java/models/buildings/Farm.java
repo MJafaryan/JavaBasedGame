@@ -1,6 +1,6 @@
 package models.buildings;
 
-import models.user.User;
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
@@ -10,11 +10,11 @@ public class Farm extends Building implements Upgradable {
     private static JSONObject config;
 
     static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_farm");
+        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
     }
 
-    public Farm(Colony colony) throws Exception {
-        super(colony);
+    public Farm(Texture texture, int x, int y, int width, int height, String farm, Colony colony) throws Exception {
+        super(texture , x, y, width, height, farm, colony);
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 

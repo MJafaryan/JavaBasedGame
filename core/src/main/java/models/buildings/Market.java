@@ -1,5 +1,6 @@
 package models.buildings;
 
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.Basics;
@@ -33,8 +34,8 @@ public class Market extends Building {
     private int tradingBox;
     private Product[] products;
 
-    public Market(Colony colony) throws Exception {
-        super(colony);
+    public Market(Texture texture, int x, int y, int width, int height, String ironMine, Colony colony) throws Exception {
+        super(texture , x, y, width, height, ironMine, colony);
         JSONObject config = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));

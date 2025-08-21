@@ -39,7 +39,7 @@ public class Colony implements Serializable {
 
     // Constructors
     public Colony(String name, User leader, String breed, int storageCapacity, int balance)
-            throws IllegalArgumentException {
+        throws IllegalArgumentException {
         if (Colony.load(leader.getUsername()) != null) {
             throw new IllegalArgumentException("Colony already exists");
         }
@@ -61,12 +61,8 @@ public class Colony implements Serializable {
         this.militaries = new HashMap<>();
         this.timeCoefficient = 1;
 
-        for (String material : Basics.MATERIALS_NAME) {
-            this.resources.put(material, 0);
-            this.incomes.put(material, 0);
-        }
-
-        this.resources.delete("coin");
+        // Initialize all resources safely
+        initializeAllResources();
 
         for (String unit : Basics.UNITS_NAME) {
             this.militaries.put(unit, 0);
@@ -101,11 +97,31 @@ public class Colony implements Serializable {
         }
     }
 
+    // Initialize all possible resources with default value 0
+    private void initializeAllResources() {
+        // Initialize materials from Basics
+        for (String material : Basics.MATERIALS_NAME) {
+            this.resources.put(material, 0);
+            this.incomes.put(material, 0);
+        }
+
+        // Initialize common resources that might be used
+        String[] commonResources = {"wood", "stone", "gold", "iron", "food"};
+        for (String resource : commonResources) {
+            if (!this.resources.containsKey(resource)) {
+                this.resources.put(resource, 0);
+            }
+            if (!this.incomes.containsKey(resource)) {
+                this.incomes.put(resource, 0);
+            }
+        }
+    }
+
     // Save and load colonies
     public synchronized void save() {
         try (FileOutputStream fileOut = new FileOutputStream(
-                String.format("%s%s.bin", SAVING_DIR, this.leader.getUsername()));
-                ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+            String.format("%s%s.bin", SAVING_DIR, this.leader.getUsername()));
+             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
             objectOut.writeObject(this);
         } catch (IOException e) {
             e.printStackTrace();
@@ -114,8 +130,8 @@ public class Colony implements Serializable {
 
     public static Colony load(String leaderName) {
         try (FileInputStream fileIn = new FileInputStream(
-                String.format("%s%s.bin", SAVING_DIR, leaderName));
-                ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
+            String.format("%s%s.bin", SAVING_DIR, leaderName));
+             ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
             return (Colony) objectIn.readObject();
         } catch (IOException | ClassNotFoundException e) {
             return null;
@@ -191,7 +207,10 @@ public class Colony implements Serializable {
     public int getUsedCapacity() {
         int usedCapacity = 0;
         for (String material : Basics.WAREHOUSE) {
-            usedCapacity += this.resources.get(material);
+            Integer amount = this.resources.get(material);
+            if (amount != null) {
+                usedCapacity += amount;
+            }
         }
         return usedCapacity;
     }
@@ -200,12 +219,26 @@ public class Colony implements Serializable {
         if (materialName.equals("coin")) {
             return this.balance;
         } else {
-            return this.resources.get(materialName);
+            Integer value = this.resources.get(materialName);
+            if (value == null) {
+                // If resource doesn't exist, create it and return 0
+                this.resources.put(materialName, 0);
+                return 0;
+            }
+            return value;
         }
     }
 
     public Building getBuilding(String id) {
         return this.buildings.get(id);
+    }
+
+    // Check if resource exists
+    public boolean hasResource(String resourceName) {
+        if (resourceName.equals("coin")) {
+            return true;
+        }
+        return this.resources.containsKey(resourceName);
     }
 
     // Setters
@@ -263,16 +296,27 @@ public class Colony implements Serializable {
         this.militaries.put(type, amount);
     }
 
+    public void setImportantBuilding(String name, String key) {
+        this.importantBuildingsCode.put(name, key);
+    }
+
     // Other functions
     public synchronized void updateResourceAmount(String resourceName, int amount)
-            throws IllegalArgumentException {
+        throws IllegalArgumentException {
         if (!resourceName.equals("coin")) {
+            // Ensure resource exists
+            if (!this.resources.containsKey(resourceName)) {
+                this.resources.put(resourceName, 0);
+            }
+
+            int currentAmount = this.resources.get(resourceName);
+
             if (amount > 0 && amount > this.storageCapacity - getUsedCapacity()) {
                 this.resources.put(resourceName, this.storageCapacity - getUsedCapacity());
-            } else if (amount < 0 && Math.abs(amount) > this.resources.get(resourceName)) {
+            } else if (amount < 0 && Math.abs(amount) > currentAmount) {
                 throw new IllegalArgumentException("Insufficient resources: " + resourceName);
             } else {
-                this.resources.put(resourceName, this.resources.get(resourceName) + amount);
+                this.resources.put(resourceName, currentAmount + amount);
             }
         } else if (amount < 0 && Math.abs(amount) > this.balance) {
             throw new IllegalArgumentException("Insufficient balance");
@@ -283,5 +327,37 @@ public class Colony implements Serializable {
 
     public synchronized void addBuilding(Building newBuilding) {
         this.buildings.put(newBuilding.getID().toString(), newBuilding);
+    }
+
+    // Safe method to get material with default value
+    public int getMaterialSafe(String materialName, int defaultValue) {
+        if (materialName.equals("coin")) {
+            return this.balance;
+        } else {
+            Integer value = this.resources.get(materialName);
+            return value != null ? value : defaultValue;
+        }
+    }
+
+    // Safe method to update resource with null check
+    public synchronized boolean safeUpdateResource(String resourceName, int amount) {
+        try {
+            updateResourceAmount(resourceName, amount);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        } catch (NullPointerException e) {
+            // If resource doesn't exist, create it and try again
+            if (!resourceName.equals("coin")) {
+                this.resources.put(resourceName, 0);
+                try {
+                    updateResourceAmount(resourceName, amount);
+                    return true;
+                } catch (Exception ex) {
+                    return false;
+                }
+            }
+            return false;
+        }
     }
 }

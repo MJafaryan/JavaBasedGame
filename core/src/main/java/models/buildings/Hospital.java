@@ -1,5 +1,6 @@
 package models.buildings;
 
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
@@ -12,8 +13,8 @@ public class Hospital extends Building {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "hospital");
     }
 
-    public Hospital(Colony colony) throws Exception {
-        super(colony);
+    public Hospital(Texture texture, int x, int y, int width, int height, String hospital, Colony colony) throws Exception {
+        super(texture , x, y, width, height, hospital, colony);
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
 

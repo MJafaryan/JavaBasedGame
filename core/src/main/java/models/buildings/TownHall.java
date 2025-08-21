@@ -1,5 +1,6 @@
 package models.buildings;
 
+import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
@@ -13,8 +14,8 @@ public class TownHall extends Building implements Upgradable {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "townHall");
     }
 
-    public TownHall(Colony colony) {
-        super(colony);
+    public TownHall(Texture texture, int x, int y, int width, int height, String ironMine, Colony colony) {
+        super(texture , x, y, width, height, ironMine, colony);
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "lvl1_health");
         this.lvl = 1;
         colony.setStorageCapacity((int) (long) SimplerJson.getDataFromJson(config, "lvl1_capacity"));

@@ -59,11 +59,9 @@ public class HashMap<T> implements Serializable {
         nodesList.deleteNode(deletingNode);
     }
 
-    public String[] getKeys() {
-        String[] keys = new String[nodesList.getLength()];
-        for (int i = 0; i < nodesList.getLength(); i++) {
-            keys[i] = nodesList.getNode(i).key;
-        }
-        return keys;
+    // Add this method to fix the issue
+    public boolean containsKey(String key) {
+        Node searchNode = new Node(key);
+        return nodesList.contains(searchNode) != -1;
     }
 }
