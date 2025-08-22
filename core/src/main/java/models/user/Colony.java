@@ -7,6 +7,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import models.Basics;
 import models.buildings.Building;
 
@@ -325,6 +328,8 @@ public class Colony implements Serializable {
         }
     }
 
+
+
     public synchronized void addBuilding(Building newBuilding) {
         this.buildings.put(newBuilding.getID().toString(), newBuilding);
     }
@@ -359,5 +364,19 @@ public class Colony implements Serializable {
             }
             return false;
         }
+    }
+    public boolean hasBuilding(String buildingType) {
+        // از طریق کلیدها جستجو کنید
+        for (String key : getBuildingKeys()) {
+            Building building = buildings.get(key);
+            if (building != null && building.getType().equals(buildingType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private List<String> getBuildingKeys() {
+        List<String> keys = new ArrayList<>();
+        return keys;
     }
 }
