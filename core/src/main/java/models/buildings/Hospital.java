@@ -16,7 +16,7 @@ public class Hospital extends Building {
     public Hospital(Texture texture, int x, int y, int width, int height, String hospital, Colony colony) throws Exception {
         super(texture , x, y, width, height, hospital, colony);
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
+        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
     }

@@ -61,16 +61,16 @@
     },
     "tradingBox": 5,
     "sellingPrices": {
-      "foods": 5,
-      "wood": 3,
+      "food": 5,
+      "iron": 12,
       "stone": 8,
-      "iron": 12
+      "wood": 3
     },
     "buyingPrices": {
-      "foods": 6,
-      "wood": 4,
+      "food": 6,
+      "iron": 14,
       "stone": 10,
-      "iron": 14
+      "wood": 4
     }
   },
   "hospital": {

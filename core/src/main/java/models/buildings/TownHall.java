@@ -35,4 +35,28 @@ public class TownHall extends Building implements Upgradable {
         this.colony.setStorageCapacity((int) (long) SimplerJson.getDataFromJson(newlvl, "capacity"));
         this.health = (int) (long) SimplerJson.getDataFromJson(newlvl, "health");
     }
+
+    public static void main(String[] args) {
+        User user = new User("ali", "345");
+        Colony colony = new Colony("ali", user, "pesian", 0, 0);
+
+        TownHall townHall;
+        try{
+            townHall = new TownHall(null, 0, 0, 0, 0, null, colony);
+
+
+            colony.setImportantBuilding("TownHall" , "townhall");
+            System.out.println("set is successful");
+
+            System.out.println("coin :" +colony.getBalance());
+            System.out.println("wood :" + colony.getResources().get("wood"));
+            System.out.println("iron :" + colony.getResources().get("iron"));
+            System.out.println("stone :" + colony.getResources().get("stone"));
+            System.out.println("food :" + colony.getResources().get("food"));
+//            System.out.println("Town Hall created");
+//            System.out.println("lvl th : " + townHall.lvl);
+        }catch(Exception e){
+
+        }
+    }
 }
