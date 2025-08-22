@@ -23,12 +23,13 @@ public abstract class Building  {
     public static JSONObject configFile;
 
     static {
-        configFile = SimplerJson.readJson(String.format("%sconfigs/building-config.json",
+        configFile = SimplerJson.readJson(String.format("building-config.json",
                 Basics.DATA_DIR));
     }
 
     public Building(Texture texture,int x , int y , int width , int height, String type , Colony colony) { // TODO: deploy map logic
         this.id = UUID.randomUUID();
+        this.texture = texture;
         this.position = new Vector2(x, y);
         this.width = width;
         this.height = height;
@@ -50,6 +51,8 @@ public abstract class Building  {
     public UUID getID() {
         return this.id;
     }
+
+    public String getType() { return this.type; }
 
     public void takeDamage(int damage) {
         health -= damage;

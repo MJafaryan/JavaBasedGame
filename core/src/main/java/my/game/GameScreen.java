@@ -5,8 +5,9 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.*;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
@@ -17,13 +18,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.*;
-import datastructures.LinkedList;
 import models.buildings.*;
 import models.user.Colony;
 import models.user.User;
 import models.Basics;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
+
+import java.util.*;
 
 public class GameScreen implements Screen {
     private final MyGame game;
@@ -34,175 +36,180 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private BitmapFont font;
 
-    // Scene2d UI
     private Stage uiStage;
     private Viewport uiViewport;
 
-    private LinkedList buildingList = new LinkedList();
+    private List<Building> buildings = new ArrayList<>();
     private String selectedBuildingType = null;
 
-    // Textures for buildings
-    private Texture houseTexture, barracksTexture, farmTexture, hospitalTexture,
-        stoneTexture, goldTexture, ironTexture, husbandryTexture;
+    private Map<String, Texture> buildingTextures = new HashMap<>();
 
-    private Texture whitePixel; // cached 1x1 texture for health bars
-
-    private InputManager inputManager;
-
-    // Player colony
     private Colony playerColony;
     private User playerUser;
 
     private static final float WORLD_WIDTH = 1000;
     private static final float WORLD_HEIGHT = 1000;
 
-    // UI elements for messages and resources
     private Label resourcesLabel;
     private Label messagesLabel;
     private ScrollPane messagesScrollPane;
     private StringBuilder messagesBuilder = new StringBuilder();
-    private float messageTimer = 0;
-    private static final float MESSAGE_DISPLAY_TIME = 5f;
     private InputMultiplexer inputMultiplexer;
 
+    private InputManager inputManager;
+    private boolean hasTownHall = false;
+    private boolean townHallPlaced = false;
+
     public GameScreen(MyGame game) {
+        this.game = game;
         try {
-            this.game = game;
-            Gdx.app.log("GameScreen", "Initializing...");
-
-            // Initialize player user and colony
-            playerUser = new User("Player", "password");
-            Gdx.app.log("GameScreen", "User created");
-
-            try {
-                playerColony = new Colony("Player Colony", playerUser, "default", 10000, 5000);
-                Gdx.app.log("GameScreen", "New colony created");
-            } catch (IllegalArgumentException e) {
-                playerColony = new Colony(playerUser);
-                Gdx.app.log("GameScreen", "Existing colony loaded");
-            }
-
-            // Initialize camera and viewport
-            camera = new OrthographicCamera();
-            viewport = new ExtendViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
-            camera.position.set(WORLD_WIDTH / 2f, WORLD_HEIGHT / 2f, 0);
-            Gdx.app.log("GameScreen", "Camera initialized");
-
-            // Load map
-            try {
-                map = new TmxMapLoader().load("Map/Map1/Map1.tmx");
-                renderer = new OrthogonalTiledMapRenderer(map);
-                Gdx.app.log("GameScreen", "Map loaded successfully");
-            } catch (Exception e) {
-                Gdx.app.error("GameScreen", "Failed to load map: " + e.getMessage());
-                map = new TiledMap();
-                renderer = new OrthogonalTiledMapRenderer(map);
-            }
-
-            batch = new SpriteBatch();
-            font = new BitmapFont();
-            font.setColor(Color.WHITE);
-            font.getData().setScale(1.2f);
-
-            // Initialize UI stage
-            uiViewport = new ScreenViewport();
-            uiStage = new Stage(uiViewport, batch);
-
-            // Create info toolbar first
-            createInfoToolbar();
-
-            // Initialize input multiplexer (UI first, then game)
-            inputMultiplexer = new InputMultiplexer();
-            inputMultiplexer.addProcessor(uiStage); // UI should consume first
-            inputMultiplexer.addProcessor(new InputAdapter() {
-                @Override
-                public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                    handleGameInput(screenX, screenY, button);
-                    return true;
-                }
-            });
-            Gdx.input.setInputProcessor(inputMultiplexer);
-
-            // Load textures with error handling
-            try {
-                houseTexture = loadTextureSafe("house.png");
-                barracksTexture = loadTextureSafe("barracks.png");
-                farmTexture = loadTextureSafe("farm.png");
-                hospitalTexture = loadTextureSafe("hospital.png");
-                stoneTexture = loadTextureSafe("stone.png");
-                goldTexture = loadTextureSafe("gold.png");
-                ironTexture = loadTextureSafe("iron.png");
-                husbandryTexture = loadTextureSafe("husbandry.png");
-                Gdx.app.log("GameScreen", "All textures loaded");
-            } catch (Exception e) {
-                Gdx.app.error("GameScreen", "Failed to load textures: " + e.getMessage());
-            }
-
-            // Initialize input manager
-            try {
-                int tileWidth = map.getProperties().get("tilewidth", Integer.class);
-                int tileHeight = map.getProperties().get("tileheight", Integer.class);
-                int mapWidthInTiles = map.getProperties().get("width", Integer.class);
-                int mapHeightInTiles = map.getProperties().get("height", Integer.class);
-                float mapWidth = mapWidthInTiles * tileWidth;
-                float mapHeight = mapHeightInTiles * tileHeight;
-                inputManager = new InputManager(camera, mapWidth, mapHeight, viewport.getWorldWidth(), viewport.getWorldHeight());
-                Gdx.app.log("GameScreen", "Input manager initialized");
-            } catch (Exception e) {
-                Gdx.app.error("GameScreen", "Failed to initialize input manager: " + e.getMessage());
-                inputManager = new InputManager(camera, WORLD_WIDTH, WORLD_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT);
-            }
-
-            // Create building toolbar
-            createBuildingToolbar();
-
-            // Initialize colony with some resources
-            initializeColonyResources();
-
-            // Add welcome message
-            addMessage("Game started successfully!");
-            addMessage("Resources initialized: Wood=1000, Stone=1000, Gold=500, Iron=500, Food=2000");
-
-            Gdx.app.log("GameScreen", "Game screen initialized successfully");
-
+            initializeGame();
         } catch (Exception e) {
-            Gdx.app.error("GameScreen", "Fatal error in constructor: " + e.getMessage(), e);
+            Gdx.app.error("GameScreen", "Fatal error: " + e.getMessage(), e);
             throw new RuntimeException("Failed to initialize GameScreen", e);
         }
     }
 
-    private void createInfoToolbar() {
-        // Resources toolbar at top
-        Table resourcesTable = new Table();
-        resourcesTable.setFillParent(true);
-        resourcesTable.top().left();
-        resourcesTable.pad(10);
+    private void initializeGame() {
+        playerUser = new User("Player", "password");
+        try {
+            playerColony = new Colony("Player Colony", playerUser, "default", 10000, 5000);
+        } catch (IllegalArgumentException e) {
+            playerColony = new Colony(playerUser);
+        }
 
-        // Resources label
+        hasTownHall = playerColony.hasBuilding("townHall");
+
+        camera = new OrthographicCamera();
+        viewport = new ExtendViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
+        camera.position.set(WORLD_WIDTH / 2f, WORLD_HEIGHT / 2f, 0);
+
+        try {
+            map = new TmxMapLoader().load("Map/Map1/Map1.tmx");
+            renderer = new OrthogonalTiledMapRenderer(map);
+        } catch (Exception e) {
+            Gdx.app.error("GameScreen", "Failed to load map: " + e.getMessage());
+            map = new TiledMap();
+            renderer = new OrthogonalTiledMapRenderer(map);
+        }
+
+        batch = new SpriteBatch();
+        font = new BitmapFont();
+        font.setColor(Color.WHITE);
+        font.getData().setScale(1.2f);
+
+        uiViewport = new ScreenViewport();
+        uiStage = new Stage(uiViewport, batch);
+        createInfoToolbar();
+
+        try {
+            int tileWidth = map.getProperties().get("tilewidth", Integer.class);
+            int tileHeight = map.getProperties().get("tileheight", Integer.class);
+            int mapWidthInTiles = map.getProperties().get("width", Integer.class);
+            int mapHeightInTiles = map.getProperties().get("height", Integer.class);
+            float mapWidth = mapWidthInTiles * tileWidth;
+            float mapHeight = mapHeightInTiles * tileHeight;
+            inputManager = new InputManager(camera, mapWidth, mapHeight, viewport.getWorldWidth(), viewport.getWorldHeight());
+        } catch (Exception e) {
+            inputManager = new InputManager(camera, WORLD_WIDTH, WORLD_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT);
+        }
+
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(uiStage);
+        inputMultiplexer.addProcessor(new InputAdapter() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                handleGameInput(screenX, screenY, button);
+                return true;
+            }
+
+            @Override
+            public boolean scrolled(float amountX, float amountY) {
+                inputManager.handleMouseScroll(amountY);
+                return true;
+            }
+        });
+        Gdx.input.setInputProcessor(inputMultiplexer);
+
+        String[] textureNames = {"house", "barracks", "farm", "hospital", "stone", "gold", "iron", "husbandry", "townHall", "market", "tower", "lumbering"};
+        for (String name : textureNames) {
+            buildingTextures.put(name, loadTextureSafe(name + ".png"));
+        }
+
+        createBuildingToolbar();
+        initializeColonyResources();
+        addMessage("Game started successfully!");
+
+        // دیباگ config برای مارکت و هاسپیتال
+        debugBuildingConfig("market");
+        debugBuildingConfig("hospital");
+
+        if (hasTownHall) {
+            townHallPlaced = true;
+            addMessage("Town Hall already exists in your colony.");
+        } else {
+            addMessage("Please place your Town Hall first! Click anywhere to place it for free.");
+            selectedBuildingType = "townHall";
+        }
+    }
+
+    private void debugBuildingConfig(String buildingType) {
+        try {
+            String configKey = getConfigKey(buildingType);
+            Gdx.app.log("ConfigDebug", "=== Debugging " + buildingType + " ===");
+            Gdx.app.log("ConfigDebug", "Config key: " + configKey);
+
+            JSONObject config = getNestedConfig(configKey);
+            if (config == null) {
+                Gdx.app.error("ConfigDebug", "Config is null for " + buildingType);
+                return;
+            }
+
+            Gdx.app.log("ConfigDebug", "Full config: " + config.toJSONString());
+
+            JSONObject cost = getCostObject(config);
+            if (cost != null) {
+                Gdx.app.log("ConfigDebug", "Cost found: " + cost.toJSONString());
+            } else {
+                Gdx.app.error("ConfigDebug", "No cost found in config for " + buildingType);
+
+                // بررسی برای ساختمان‌های چند سطحی
+                if (config.containsKey("lvl1")) {
+                    Object lvl1Obj = config.get("lvl1");
+                    if (lvl1Obj instanceof JSONObject) {
+                        JSONObject lvl1Config = (JSONObject) lvl1Obj;
+                        cost = getCostObject(lvl1Config);
+                        if (cost != null) {
+                            Gdx.app.log("ConfigDebug", "Cost found in lvl1: " + cost.toJSONString());
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            Gdx.app.error("ConfigDebug", "Error debugging " + buildingType + ": " + e.getMessage(), e);
+        }
+    }
+
+    private void createInfoToolbar() {
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = new BitmapFont();
         labelStyle.fontColor = Color.WHITE;
 
+        Table resourcesTable = new Table();
+        resourcesTable.setFillParent(true);
+        resourcesTable.top().left().pad(10);
         resourcesLabel = new Label("", labelStyle);
         resourcesTable.add(resourcesLabel).expandX().left().pad(10);
 
-        // Messages toolbar at top right
         Table messagesTable = new Table();
         messagesTable.setFillParent(true);
-        messagesTable.top().right();
-        messagesTable.pad(10);
-
-        // Messages label with scroll pane
+        messagesTable.top().right().pad(10);
         messagesLabel = new Label("", labelStyle);
         messagesLabel.setWrap(true);
         messagesLabel.setAlignment(Align.right);
-
         messagesScrollPane = new ScrollPane(messagesLabel);
         messagesScrollPane.setScrollingDisabled(true, false);
-        messagesScrollPane.setFadeScrollBars(false);
-        messagesScrollPane.setScrollbarsVisible(true);
-        messagesScrollPane.setScrollBarPositions(false, true);
-
         messagesTable.add(messagesScrollPane).width(300).height(100).pad(10);
 
         uiStage.addActor(resourcesTable);
@@ -213,142 +220,98 @@ public class GameScreen implements Screen {
         Table toolbar = new Table();
         toolbar.setFillParent(true);
         toolbar.bottom();
-        toolbar.setDebug(true);
 
-        // Create image buttons
-        ImageButton houseButton = createBuildingButton(houseTexture, "house");
-        ImageButton barracksButton = createBuildingButton(barracksTexture, "barracks");
-        ImageButton farmButton = createBuildingButton(farmTexture, "farm");
-        ImageButton hospitalButton = createBuildingButton(hospitalTexture, "hospital");
-        ImageButton stoneButton = createBuildingButton(stoneTexture, "stone");
-        ImageButton goldButton = createBuildingButton(goldTexture, "gold");
-        ImageButton ironButton = createBuildingButton(ironTexture, "iron");
-        ImageButton husbandryButton = createBuildingButton(husbandryTexture, "husbandry");
-
-        // Create button row
         Table buttonRow = new Table();
-        buttonRow.add(houseButton).size(80, 80).pad(10);
-        buttonRow.add(barracksButton).size(80, 80).pad(10);
-        buttonRow.add(farmButton).size(80, 80).pad(10);
-        buttonRow.add(hospitalButton).size(80, 80).pad(10);
-        buttonRow.add(stoneButton).size(80, 80).pad(10);
-        buttonRow.add(goldButton).size(80, 80).pad(10);
-        buttonRow.add(ironButton).size(80, 80).pad(10);
-        buttonRow.add(husbandryButton).size(80, 80).pad(10);
+        for (String buildingType : buildingTextures.keySet()) {
+            if (!townHallPlaced) {
+                if (buildingType.equals("townHall")) {
+                    ImageButton button = createBuildingButton(buildingTextures.get(buildingType), buildingType);
+                    buttonRow.add(button).size(80, 80).pad(10);
+                }
+                continue;
+            }
 
-        // Add button row to toolbar
+            if (!buildingType.equals("townHall")) {
+                ImageButton button = createBuildingButton(buildingTextures.get(buildingType), buildingType);
+                buttonRow.add(button).size(80, 80).pad(10);
+            }
+        }
+
         toolbar.add(buttonRow).padBottom(20);
         uiStage.addActor(toolbar);
-
-        Gdx.app.log("UI", "Building toolbar created");
     }
 
     private ImageButton createBuildingButton(Texture texture, String buildingType) {
         ImageButton button = new ImageButton(new TextureRegionDrawable(new TextureRegion(texture)));
-
         button.addListener(new ClickListener() {
             @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                button.setColor(1.2f, 1.2f, 1.2f, 1f);
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                button.setColor(1f, 1f, 1f, 1f);
-            }
-
-            @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (selectedBuildingType != null && selectedBuildingType.equals(buildingType)) {
-                    selectedBuildingType = null;
-                    addMessage("Building deselected: " + buildingType);
-                } else {
-                    selectedBuildingType = buildingType;
-                    addMessage("Building selected: " + buildingType);
-                    addMessage("Cost: " + getBuildingInfo(buildingType));
+                if (!townHallPlaced && !buildingType.equals("townHall")) {
+                    addMessage("You must place Town Hall first!");
+                    return;
                 }
-                // event.stop();
+
+                selectedBuildingType = selectedBuildingType != null && selectedBuildingType.equals(buildingType) ?
+                    null : buildingType;
+                addMessage(selectedBuildingType == null ?
+                    "Building deselected: " + buildingType :
+                    "Building selected: " + buildingType + " | Cost: " + getBuildingInfo(buildingType));
             }
         });
-
         return button;
     }
 
     private void addMessage(String message) {
-        if (messagesLabel == null) {
-            Gdx.app.log("Messages", "messagesLabel is null! Message: " + message);
-            return;
-        }
+        if (messagesLabel == null) return;
 
         messagesBuilder.append("• ").append(message).append("\n");
         messagesLabel.setText(messagesBuilder.toString());
 
-        if (messagesScrollPane != null) {
-            messagesScrollPane.scrollTo(0, 0, 0, 0);
-        }
-
-        if (messagesBuilder.length() > 1000) {
-            messagesBuilder.delete(0, 200);
-        }
+        if (messagesScrollPane != null) messagesScrollPane.scrollTo(0, 0, 0, 0);
+        if (messagesBuilder.length() > 1000) messagesBuilder.delete(0, 200);
     }
 
     private void updateResourcesDisplay() {
         if (resourcesLabel == null) return;
 
         String resourcesText = String.format(
-            "Wood: %d | Stone: %d | Gold: %d | Iron: %d | Food: %d | Coins: %d | Pop: %d/%d | Storage: %d/%d",
-            playerColony.getMaterial("wood"),
-            playerColony.getMaterial("stone"),
-            playerColony.getMaterial("gold"),
-            playerColony.getMaterial("iron"),
+            "Wood: %d | Stone: %d | Coin: %d | Iron: %d | Food: %d | Pop: %d/%d | Storage: %d/%d",
+            playerColony.getMaterial("wood"), playerColony.getMaterial("stone"),
+            playerColony.getMaterial("coin"), playerColony.getMaterial("iron"),
             playerColony.getMaterial("food"),
-            playerColony.getBalance(),
-            playerColony.getPopulation(),
-            playerColony.getMaximumPossiblePopulation(),
-            playerColony.getUsedCapacity(),
-            playerColony.getStorageCapacity()
+            playerColony.getPopulation(), playerColony.getMaximumPossiblePopulation(),
+            playerColony.getUsedCapacity(), playerColony.getStorageCapacity()
         );
         resourcesLabel.setText(resourcesText);
     }
 
-    private void updateMessages(float delta) {
-        messageTimer += delta;
-        if (messageTimer > MESSAGE_DISPLAY_TIME) {
-            messageTimer = 0;
-        }
-    }
-
     private void handleGameInput(int screenX, int screenY, int button) {
-        try {
-            // اگر کلیک روی UI بوده، پردازش نکن
-            if (isClickOnUI(screenX, screenY)) {
-                return;
-            }
+        if (isClickOnUI(screenX, screenY)) return;
 
-            Vector2 touchPos = new Vector2(screenX, screenY);
-            Vector2 worldPos = viewport.unproject(touchPos.cpy());
+        Vector3 screenPos = new Vector3(screenX, screenY, 0);
+        Vector3 worldPos = camera.unproject(screenPos.cpy());
 
-            if (selectedBuildingType != null && button == Input.Buttons.LEFT) {
-                placeBuilding(worldPos.x, worldPos.y);
-            }
+        float roundedX = (int)(worldPos.x / 64) * 64;
+        float roundedY = (int)(worldPos.y / 64) * 64;
 
-            if (button == Input.Buttons.RIGHT) {
-                selectedBuildingType = null;
-                addMessage("Selection cancelled");
-            }
+        if (selectedBuildingType != null && button == Input.Buttons.LEFT) {
+            placeBuilding(roundedX, roundedY);
+        } else if (button == Input.Buttons.RIGHT) {
+            selectedBuildingType = null;
+            addMessage("Selection cancelled");
+        }
 
-        } catch (Exception e) {
-            addMessage("Input error: " + e.getMessage());
+        if (!townHallPlaced && selectedBuildingType == null) {
+            selectedBuildingType = "townHall";
+            placeBuilding(roundedX, roundedY);
         }
     }
 
     private Texture loadTextureSafe(String path) {
         try {
-            Texture texture = new Texture(Gdx.files.internal(path));
-            Gdx.app.log("Texture", "Loaded: " + path);
-            return texture;
+            return new Texture(Gdx.files.internal(path));
         } catch (Exception e) {
-            Gdx.app.error("Texture", "Failed to load texture: " + path + " - " + e.getMessage());
+            Gdx.app.error("Texture", "Failed to load: " + path);
             Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
             pixmap.setColor(Color.MAGENTA);
             pixmap.fill();
@@ -359,116 +322,334 @@ public class GameScreen implements Screen {
     }
 
     private void initializeColonyResources() {
-        String[] resourcesToUpdate = {"wood", "stone", "gold", "iron", "food"};
+        String[] resources = {"wood", "stone", "coin", "iron", "food"};
         int[] amounts = {1000, 1000, 500, 500, 2000};
 
-        for (int i = 0; i < resourcesToUpdate.length; i++) {
+        for (int i = 0; i < resources.length; i++) {
             try {
-                playerColony.updateResourceAmount(resourcesToUpdate[i], amounts[i]);
-                Gdx.app.log("Resource", "Updated " + resourcesToUpdate[i] + " to " + amounts[i]);
+                playerColony.updateResourceAmount(resources[i], amounts[i]);
             } catch (Exception e) {
-                Gdx.app.error("Resource", "FAILED to update " + resourcesToUpdate[i] + ": " + e.getMessage());
+                Gdx.app.error("Resource", "FAILED to update " + resources[i]);
             }
         }
     }
 
     @Override
     public void render(float delta) {
-        try {
-            Gdx.gl.glClearColor(0, 0, 0, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-            inputManager.update();
+        inputManager.update();
+        camera.update();
 
-            camera.update();
-            renderer.setView(camera);
-            renderer.render();
+        renderer.setView(camera);
+        renderer.render();
 
-            updateResourcesDisplay();
-            updateMessages(delta);
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        renderBuildings();
+        renderSelectionInfo();
+        batch.end();
 
-            batch.setProjectionMatrix(camera.combined);
+        updateResourcesDisplay();
+
+        uiStage.act(delta);
+        uiStage.draw();
+
+        if (!townHallPlaced) {
             batch.begin();
-            renderBuildings();
-            renderSelectionInfo();
+            font.draw(batch, "Click anywhere to place your Town Hall (FREE)", 50, 50);
             batch.end();
-
-            uiStage.act(delta);
-            uiStage.draw();
-
-        } catch (Exception e) {
-            addMessage("Render error: " + e.getMessage());
         }
     }
 
     private void placeBuilding(float x, float y) {
         addMessage("Attempting to place " + selectedBuildingType + " at " + (int)x + ", " + (int)y);
 
+        if (townHallPlaced && selectedBuildingType.equals("townHall")) {
+            addMessage("You can only have one Town Hall!");
+            selectedBuildingType = null;
+            return;
+        }
+
         if (!isValidPosition(x, y)) {
             addMessage("Cannot build here - invalid position!");
             return;
         }
 
+        if (!selectedBuildingType.equals("townHall")) {
+            boolean success = checkAndDeductBuildingCost(selectedBuildingType);
+            if (!success) {
+                addMessage("Building failed: not enough resources.");
+                selectedBuildingType = null;
+                return;
+            }
+        }
+
         try {
-            Building newBuilding = createBuilding(selectedBuildingType, (int)x, (int)y);
-            buildingList.addNode(newBuilding);
+            int roundedX = (int) (Math.floor(x / 64) * 64);
+            int roundedY = (int) (Math.floor(y / 64) * 64);
 
-            deductBuildingCost(selectedBuildingType);
+            Building newBuilding = createBuilding(selectedBuildingType, roundedX, roundedY);
+            buildings.add(newBuilding);
 
-            addMessage(selectedBuildingType + " built successfully!");
-            addMessage("Resources deducted for construction");
+            if (selectedBuildingType.equals("townHall")) {
+                townHallPlaced = true;
+                hasTownHall = true;
+                createBuildingToolbar();
+                addMessage("Town Hall built successfully! Now you can build other buildings.");
+            } else {
+                addMessage(selectedBuildingType + " built successfully at " + roundedX + ", " + roundedY);
+            }
 
         } catch (Exception e) {
             addMessage("Failed to build: " + e.getMessage());
+            Gdx.app.error("PlaceBuilding", "Error: " + e.getMessage(), e);
         }
 
         selectedBuildingType = null;
     }
 
-    private void deductBuildingCost(String buildingType) {
+    private boolean checkAndDeductBuildingCost(String buildingType) {
         try {
             String configKey = getConfigKey(buildingType);
-            JSONObject config = (JSONObject) SimplerJson.getDataFromJson(Building.configFile, configKey);
+            Gdx.app.log("CostDebug", "Building: " + buildingType + ", ConfigKey: " + configKey);
 
-            if (config != null) {
-                JSONObject cost = (JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost");
-                if (cost == null) {
-                    cost = (JSONObject) SimplerJson.getDataFromJson(config, "cost");
+            JSONObject config = getNestedConfig(configKey);
+
+            if (config == null) {
+                addMessage("Config not found for " + buildingType + ", using default costs");
+                return checkAndDeductDefaultCost(buildingType);
+            }
+
+            JSONObject cost = getCostObject(config);
+
+            if (cost == null) {
+                // برای ساختمان‌های چند سطحی مثل farm که cost در lvl1 قرار دارد
+                if (config.containsKey("lvl1")) {
+                    Object lvl1Obj = config.get("lvl1");
+                    if (lvl1Obj instanceof JSONObject) {
+                        JSONObject lvl1Config = (JSONObject) lvl1Obj;
+                        cost = getCostObject(lvl1Config);
+                    }
                 }
 
-                if (cost != null && Basics.MATERIALS_NAME != null) {
-                    for (String material : Basics.MATERIALS_NAME) {
-                        Object materialCost = SimplerJson.getDataFromJson(cost, material);
-                        if (materialCost != null && materialCost instanceof Long) {
-                            int costAmount = ((Long) materialCost).intValue();
-                            if (costAmount > 0) {
-                                int currentAmount = playerColony.getMaterial(material);
-                                playerColony.updateResourceAmount(material, currentAmount - costAmount);
-                                addMessage("-" + costAmount + " " + material);
-                            }
-                        }
+                if (cost == null) {
+                    addMessage("No cost defined in config for " + buildingType + ", using default costs");
+                    return checkAndDeductDefaultCost(buildingType);
+                }
+            }
+
+            Gdx.app.log("CostDebug", "Cost object for " + buildingType + ": " + cost.toString());
+
+            List<String> missingResources = new ArrayList<>();
+            for (String material : Basics.MATERIALS_NAME) {
+                Object materialCostObj = cost.get(material);
+                if (materialCostObj != null) {
+                    int costAmount = parseMaterialCost(materialCostObj);
+                    Gdx.app.log("CostDebug", material + " cost: " + costAmount);
+                    if (costAmount > 0 && playerColony.getMaterial(material) < costAmount) {
+                        missingResources.add(material + ": " + playerColony.getMaterial(material) + "/" + costAmount);
                     }
                 }
             }
+
+            if (!missingResources.isEmpty()) {
+                addMessage("Not enough resources: " + String.join(", ", missingResources));
+                return false;
+            }
+
+            for (String material : Basics.MATERIALS_NAME) {
+                Object materialCostObj = cost.get(material);
+                if (materialCostObj != null) {
+                    int costAmount = parseMaterialCost(materialCostObj);
+                    if (costAmount > 0) {
+                        playerColony.updateResourceAmount(material, -costAmount);
+                        addMessage("-" + costAmount + " " + material);
+                    }
+                }
+            }
+
+            return true;
         } catch (Exception e) {
-            addMessage("Error deducting resources: " + e.getMessage());
+            addMessage("Error deducting resources for " + buildingType + ": " + e.getMessage());
+            Gdx.app.error("CostDebug", "Error in checkAndDeductBuildingCost: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private boolean checkAndDeductDefaultCost(String buildingType) {
+        Map<String, Integer> defaultCosts = getDefaultCosts(buildingType);
+
+        if (defaultCosts == null) {
+            addMessage("No cost information available for " + buildingType);
+            return false;
+        }
+
+        List<String> missingResources = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : defaultCosts.entrySet()) {
+            if (playerColony.getMaterial(entry.getKey()) < entry.getValue()) {
+                missingResources.add(entry.getKey() + ": " + playerColony.getMaterial(entry.getKey()) + "/" + entry.getValue());
+            }
+        }
+
+        if (!missingResources.isEmpty()) {
+            addMessage("Not enough resources: " + String.join(", ", missingResources));
+            return false;
+        }
+
+        for (Map.Entry<String, Integer> entry : defaultCosts.entrySet()) {
+            playerColony.updateResourceAmount(entry.getKey(), -entry.getValue());
+            addMessage("-" + entry.getValue() + " " + entry.getKey() + " (default)");
+        }
+
+        return true;
+    }
+
+    private Map<String, Integer> getDefaultCosts(String buildingType) {
+        Map<String, Map<String, Integer>> defaultCosts = new HashMap<>();
+        defaultCosts.put("townHall", Map.of("wood", 50, "stone", 30, "coin", 100));
+        defaultCosts.put("house", Map.of("wood", 8, "coin", 10));
+        defaultCosts.put("barracks", Map.of("wood", 20, "stone", 10, "coin", 20));
+        defaultCosts.put("farm", Map.of("wood", 15, "coin", 8));
+        defaultCosts.put("hospital", Map.of("wood", 40, "stone", 30, "iron", 16, "coin", 60));
+        defaultCosts.put("stone", Map.of("wood", 15, "coin", 15));
+        defaultCosts.put("gold", Map.of("stone", 8, "wood", 10, "iron", 5, "coin", 5));
+        defaultCosts.put("iron", Map.of("wood", 25, "stone", 15, "coin", 25));
+        defaultCosts.put("husbandry", Map.of("wood", 20, "coin", 10));
+        defaultCosts.put("market", Map.of("wood", 25, "stone", 20, "coin", 25));
+        defaultCosts.put("tower", Map.of("wood", 30, "stone", 15, "coin", 30));
+        defaultCosts.put("lumbering", Map.of("coin", 8));
+
+        return defaultCosts.get(buildingType);
+    }
+
+    private String getConfigKey(String buildingType) {
+        Map<String, String> configKeys = new HashMap<>();
+        configKeys.put("house", "house");
+        configKeys.put("barracks", "barracks");
+        configKeys.put("farm", "farms.farm");
+        configKeys.put("hospital", "hospital");
+        configKeys.put("stone", "farms.stoneMine");
+        configKeys.put("gold", "farms.goldMine");
+        configKeys.put("iron", "farms.ironMine");
+        configKeys.put("husbandry", "farms.animalHusbandry");
+        configKeys.put("townHall", "townHall");
+        configKeys.put("market", "market");
+        configKeys.put("tower", "tower");
+        configKeys.put("lumbering", "farms.lumbering");
+        return configKeys.getOrDefault(buildingType, buildingType);
+    }
+
+    private JSONObject getNestedConfig(String configKey) {
+        try {
+            Gdx.app.log("ConfigDebug", "Looking for config key: " + configKey);
+
+            if (configKey == null || configKey.isEmpty()) {
+                Gdx.app.error("ConfigDebug", "Config key is null or empty");
+                return null;
+            }
+
+            if (configKey.contains(".")) {
+                String[] keys = configKey.split("\\.");
+                if (keys.length == 0) {
+                    Gdx.app.error("ConfigDebug", "Invalid config key format: " + configKey);
+                    return null;
+                }
+
+                // گرفتن اولین سطح - استفاده از پارامتر صحیح برای getDataFromJson
+                JSONObject current = (JSONObject) SimplerJson.getDataFromJson(Building.configFile, keys[0]);
+                if (current == null) {
+                    Gdx.app.error("ConfigDebug", "First level not found: " + keys[0]);
+                    return null;
+                }
+
+                // رفتن به سطوح تو در تو
+                for (int i = 1; i < keys.length; i++) {
+                    if (current == null) {
+                        Gdx.app.error("ConfigDebug", "Current is null at key: " + keys[i]);
+                        return null;
+                    }
+
+                    Object nextLevel = current.get(keys[i]);
+                    if (nextLevel instanceof JSONObject) {
+                        current = (JSONObject) nextLevel;
+                    } else {
+                        Gdx.app.error("ConfigDebug", "Key '" + keys[i] + "' is not a JSONObject, it's: " +
+                            (nextLevel != null ? nextLevel.getClass().getSimpleName() : "null"));
+                        return null;
+                    }
+                }
+                return current;
+
+            } else {
+                // برای کلیدهای ساده - استفاده از پارامتر صحیح برای getDataFromJson
+                JSONObject buildingConfig = (JSONObject) SimplerJson.getDataFromJson(Building.configFile, configKey);
+
+                if (buildingConfig == null) {
+                    Gdx.app.error("ConfigDebug", "Direct config not found: " + configKey);
+                    return null;
+                }
+
+                return buildingConfig;
+            }
+        } catch (Exception e) {
+            Gdx.app.error("ConfigDebug", "Error getting nested config for '" + configKey + "': " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private int parseMaterialCost(Object costObj) {
+        if (costObj instanceof Long) return ((Long) costObj).intValue();
+        if (costObj instanceof Integer) return (Integer) costObj;
+        if (costObj instanceof String) {
+            try { return Integer.parseInt((String) costObj); }
+            catch (NumberFormatException e) { return 0; }
+        }
+        return 0;
+    }
+
+    private JSONObject getCostObject(JSONObject config) {
+        if (config == null) {
+            Gdx.app.error("CostDebug", "Config is null in getCostObject");
+            return null;
+        }
+
+        try {
+            if (config.containsKey("cost")) {
+                Object costObj = config.get("cost");
+                if (costObj instanceof JSONObject) {
+                    return (JSONObject) costObj;
+                } else {
+                    Gdx.app.error("CostDebug", "Cost is not a JSONObject: " + costObj);
+                    return null;
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            Gdx.app.error("CostDebug", "Error in getCostObject: " + e.getMessage(), e);
+            return null;
         }
     }
 
     private Building createBuilding(String type, int x, int y) throws Exception {
-        Texture texture = getTextureForBuilding(type);
-        int width = 64;
-        int height = 64;
+        Texture texture = buildingTextures.get(type);
+        int size = 64;
 
         switch (type) {
-            case "house": return new House(texture, x, y, width, height, "house", playerColony);
-            case "barracks": return new Barracks(texture, x, y, width, height, "barracks", playerColony);
-            case "farm": return new Farm(texture, x, y, width, height, "farm", playerColony);
-            case "hospital": return new Hospital(texture, x, y, width, height, "hospital", playerColony);
-            case "stone": return new StoneMine(texture, x, y, width, height, "stone_mine", playerColony);
-            case "gold": return new GoldMine(texture, x, y, width, height, "gold_mine", playerColony);
-            case "iron": return new IronMine(texture, x, y, width, height, "iron_mine", playerColony);
-            case "husbandry": return new AnimalHusbandry(texture, x, y, width, height, "animal_husbandry", playerColony);
+            case "townHall": return new TownHall(texture, x, y, size, size, "townHall", playerColony);
+            case "house": return new House(texture, x, y, size, size, "house", playerColony);
+            case "barracks": return new Barracks(texture, x, y, size, size, "barracks", playerColony);
+            case "farm": return new Farm(texture, x, y, size, size, "farm", playerColony);
+            case "hospital": return new Hospital(texture, x, y, size, size, "hospital", playerColony);
+            case "stone": return new StoneMine(texture, x, y, size, size, "stone_mine", playerColony);
+            case "gold": return new GoldMine(texture, x, y, size, size, "gold_mine", playerColony);
+            case "iron": return new IronMine(texture, x, y, size, size, "iron_mine", playerColony);
+            case "husbandry": return new AnimalHusbandry(texture, x, y, size, size, "animal_husbandry", playerColony);
+            case "market": return new Market(texture, x, y, size, size, "market", playerColony);
+            case "tower": return new Tower(texture, x, y, size, size, "tower", playerColony);
+            case "lumbering": return new Lumbering(texture, x, y, size, size, "lumbering", playerColony);
             default: throw new Exception("Unknown building type: " + type);
         }
     }
@@ -487,99 +668,63 @@ public class GameScreen implements Screen {
             int tileX = (int)(worldX / tileWidth);
             int tileY = (int)(worldY / tileHeight);
 
-            if (tileX < 0 || tileX >= mapWidthInTiles || tileY < 0 || tileY >= mapHeightInTiles) {
-                return false;
-            }
+            if (tileX < 0 || tileX >= mapWidthInTiles || tileY < 0 || tileY >= mapHeightInTiles) return false;
 
             TiledMapTileLayer obstacleLayer = (TiledMapTileLayer) map.getLayers().get("mountain and tree");
             if (obstacleLayer != null) {
                 TiledMapTileLayer.Cell cell = obstacleLayer.getCell(tileX, tileY);
-                // Buildable only if there's NO obstacle tile on this cell
                 return cell == null || cell.getTile() == null;
             }
 
             return true;
-
         } catch (Exception e) {
             return false;
         }
     }
 
     private boolean isOccupied(float x, float y) {
-        for (int i = 0; i < buildingList.getLength(); i++) {
-            Object obj = buildingList.getNode(i);
-            if (obj instanceof Building) {
-                Building building = (Building) obj;
-                Vector2 pos = building.getPosition();
-                if (Math.abs(pos.x - x) < 64 && Math.abs(pos.y - y) < 64) {
-                    return true;
-                }
-            }
+        for (Building building : buildings) {
+            Vector2 pos = building.getPosition();
+            if (Math.abs(pos.x - x) < 64 && Math.abs(pos.y - y) < 64) return true;
         }
         return false;
     }
 
     private void renderBuildings() {
-        for (int i = 0; i < buildingList.getLength(); i++) {
+        for (Building building : buildings) {
             try {
-                Object obj = buildingList.getNode(i);
-                if (obj instanceof Building) {
-                    Building building = (Building) obj;
-                    Texture texture = building.getTexture();
-                    Vector2 position = building.getPosition();
+                Texture texture = building.getTexture();
+                Vector2 position = building.getPosition();
+                if (texture != null) {
                     batch.draw(texture, position.x, position.y, texture.getWidth(), texture.getHeight());
-                    renderHealthBar(building);
                 }
             } catch (Exception e) {
-                Gdx.app.error("RenderBuildings", "Error rendering building: " + e.getMessage());
+                Gdx.app.error("RenderBuildings", "Error rendering building: " + e.getMessage(), e);
             }
         }
     }
 
-    private Texture getWhitePixel() {
-        if (whitePixel == null) {
-            Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-            pixmap.setColor(Color.WHITE);
-            pixmap.fill();
-            whitePixel = new Texture(pixmap);
-            pixmap.dispose();
-        }
-        return whitePixel;
-    }
-
-    private void renderHealthBar(Building building) {
-        try {
-            float healthPercentage = (float) building.getHealth() / 100f;
-            float barWidth = 50f;
-            float barHeight = 5f;
-            Vector2 position = building.getPosition();
-            Texture texture = building.getTexture();
-
-            float x = position.x + (texture.getWidth() - barWidth) / 2f;
-            float y = position.y + texture.getHeight() + 5f;
-
-            batch.setColor(Color.RED);
-            batch.draw(getWhitePixel(), x, y, barWidth, barHeight);
-            batch.setColor(Color.GREEN);
-            batch.draw(getWhitePixel(), x, y, barWidth * healthPercentage, barHeight);
-            batch.setColor(Color.WHITE);
-        } catch (Exception e) {
-            Gdx.app.error("RenderHealthBar", "Error rendering health bar: " + e.getMessage());
-        }
-    }
-
     private void renderSelectionInfo() {
-        try {
-            if (selectedBuildingType != null) {
-                Vector2 mousePos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-                Vector2 worldPos = viewport.unproject(mousePos.cpy());
+        if (selectedBuildingType == null && townHallPlaced) return;
+        if (!townHallPlaced) selectedBuildingType = "townHall";
 
-                Texture texture = getTextureForBuilding(selectedBuildingType);
-                if (texture != null) {
-                    boolean canBuild = isValidPosition(worldPos.x, worldPos.y);
-                    batch.setColor(1, 1, 1, canBuild ? 0.7f : 0.3f);
-                    batch.draw(texture, worldPos.x - texture.getWidth() / 2f, worldPos.y - texture.getHeight() / 2f);
-                    batch.setColor(1, 1, 1, 1);
+        try {
+            Vector3 screenPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            Vector3 worldPos = camera.unproject(screenPos.cpy());
+
+            Texture texture = buildingTextures.get(selectedBuildingType);
+
+            if (texture != null) {
+                float drawX = (int)(worldPos.x / 64) * 64;
+                float drawY = (int)(worldPos.y / 64) * 64;
+
+                boolean canBuild = isValidPosition(drawX, drawY);
+                batch.setColor(1, 1, 1, canBuild ? 0.7f : 0.3f);
+                batch.draw(texture, drawX, drawY, texture.getWidth(), texture.getHeight());
+                batch.setColor(1, 1, 1, 1);
+
+                if (!townHallPlaced) {
+                    font.draw(batch, "FREE Town Hall Placement", drawX, drawY - 10);
                 }
             }
         } catch (Exception e) {
@@ -587,41 +732,34 @@ public class GameScreen implements Screen {
         }
     }
 
-
     private String getBuildingInfo(String buildingType) {
+        if (buildingType.equals("townHall") && !townHallPlaced) {
+            return "FREE (First building)";
+        }
+
         try {
-            String configKey = getConfigKey(buildingType);
-            JSONObject config = (JSONObject) SimplerJson.getDataFromJson(Building.configFile, configKey);
-
-
+            JSONObject config = getNestedConfig(getConfigKey(buildingType));
             if (config == null) return "Config not found";
 
-
-            JSONObject cost = null;
-
-
-// اگر ساختمان چند سطحی باشد
-            if (config.containsKey("lvl1")) {
-                JSONObject lvl1 = (JSONObject) SimplerJson.getDataFromJson(config, "lvl1");
-                if (lvl1 != null) {
-                    cost = (JSONObject) SimplerJson.getDataFromJson(lvl1, "cost");
+            JSONObject cost = getCostObject(config);
+            if (cost == null) {
+                // بررسی برای ساختمان‌های چند سطحی
+                if (config.containsKey("lvl1")) {
+                    Object lvl1Obj = config.get("lvl1");
+                    if (lvl1Obj instanceof JSONObject) {
+                        JSONObject lvl1Config = (JSONObject) lvl1Obj;
+                        cost = getCostObject(lvl1Config);
+                    }
                 }
-            } else if (config.containsKey("cost")) {
-// اگر ساختمان ساده باشد
-                cost = (JSONObject) SimplerJson.getDataFromJson(config, "cost");
+                if (cost == null) return "No cost information";
             }
 
-
-            if (cost == null) return "No cost information";
-
-
             StringBuilder info = new StringBuilder();
-            if (Basics.MATERIALS_NAME != null) {
-                for (String material : Basics.MATERIALS_NAME) {
-                    Object materialCost = SimplerJson.getDataFromJson(cost, material);
-                    if (materialCost != null) {
-                        info.append(material).append(": ").append(materialCost).append(" ");
-                    }
+            for (String material : Basics.MATERIALS_NAME) {
+                Object materialCost = cost.get(material);
+                if (materialCost != null) {
+                    int costAmount = parseMaterialCost(materialCost);
+                    if (costAmount > 0) info.append(material).append(": ").append(costAmount).append(" ");
                 }
             }
             return info.toString().isEmpty() ? "Cost info unavailable" : info.toString();
@@ -631,91 +769,50 @@ public class GameScreen implements Screen {
     }
 
     private boolean isClickOnUI(int screenX, int screenY) {
-        // مختصات صفحه را به مختصات UI stage تبدیل کن
         Vector2 stageCoords = uiStage.screenToStageCoordinates(new Vector2(screenX, screenY));
-
-        // بررسی کن که آیا کلیک روی یکی از actorهای UI بوده
-        Actor hit = uiStage.hit(stageCoords.x, stageCoords.y, true);
-        return hit != null;
-    }
-
-    private String getConfigKey(String buildingType) {
-        switch (buildingType) {
-            case "house": return "house";
-            case "barracks": return "barracks";
-            case "farm": return "farms.farm";
-            case "hospital": return "hospital";
-            case "stone": return "farms.stoneMine";
-            case "gold": return "farms.goldMine";
-            case "iron": return "farms.ironMine";
-            case "husbandry": return "farms.animalHusbandry";
-            default: return buildingType;
-        }
-    }
-
-    private Texture getTextureForBuilding(String type) {
-        switch (type) {
-            case "house": return houseTexture;
-            case "barracks": return barracksTexture;
-            case "farm": return farmTexture;
-            case "hospital": return hospitalTexture;
-            case "stone": return stoneTexture;
-            case "gold": return goldTexture;
-            case "iron": return ironTexture;
-            case "husbandry": return husbandryTexture;
-            default: return null;
-        }
+        return uiStage.hit(stageCoords.x, stageCoords.y, true) != null;
     }
 
     @Override
     public void resize(int width, int height) {
+        viewport.update(width, height, true);
+        uiViewport.update(width, height, true);
+
         try {
-            viewport.update(width, height, true);
-            uiViewport.update(width, height, true);
-            addMessage("Screen resized to: " + width + "x" + height);
+            int tileWidth = map.getProperties().get("tilewidth", Integer.class);
+            int tileHeight = map.getProperties().get("tileheight", Integer.class);
+            int mapWidthInTiles = map.getProperties().get("width", Integer.class);
+            int mapHeightInTiles = map.getProperties().get("height", Integer.class);
+            float mapWidth = mapWidthInTiles * tileWidth;
+            float mapHeight = mapHeightInTiles * tileHeight;
+            inputManager = new InputManager(camera, mapWidth, mapHeight, viewport.getWorldWidth(), viewport.getWorldHeight());
         } catch (Exception e) {
-            addMessage("Resize error: " + e.getMessage());
+            inputManager = new InputManager(camera, WORLD_WIDTH, WORLD_HEIGHT, viewport.getWorldWidth(), viewport.getWorldHeight());
         }
+
+        addMessage("Screen resized to: " + width + "x" + height);
     }
 
     @Override
     public void dispose() {
-        try {
-            map.dispose();
-            renderer.dispose();
-            batch.dispose();
-            font.dispose();
-            uiStage.dispose();
+        map.dispose();
+        renderer.dispose();
+        batch.dispose();
+        font.dispose();
+        uiStage.dispose();
 
-            if (whitePixel != null) whitePixel.dispose();
-
-            if (houseTexture != null) houseTexture.dispose();
-            if (barracksTexture != null) barracksTexture.dispose();
-            if (farmTexture != null) farmTexture.dispose();
-            if (hospitalTexture != null) hospitalTexture.dispose();
-            if (stoneTexture != null) stoneTexture.dispose();
-            if (goldTexture != null) goldTexture.dispose();
-            if (ironTexture != null) ironTexture.dispose();
-            if (husbandryTexture != null) husbandryTexture.dispose();
-
-            // Do NOT dispose building textures individually: they are shared
-
-            playerColony.save();
-            addMessage("Game saved on dispose");
-
-        } catch (Exception e) {
-            addMessage("Dispose error: " + e.getMessage());
+        for (Texture texture : buildingTextures.values()) {
+            if (texture != null) texture.dispose();
         }
+
+        playerColony.save();
+        addMessage("Game saved on dispose");
     }
 
     @Override
     public void pause() {
-        try {
-            playerColony.save();
-            addMessage("Game saved on pause");
-        } catch (Exception e) {
-            addMessage("Pause save error: " + e.getMessage());
-        }
+        playerColony.save();
+        addMessage("Game saved on pause");
     }
 
     @Override
@@ -731,11 +828,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
-        try {
-            playerColony.save();
-            addMessage("Game saved on hide");
-        } catch (Exception e) {
-            addMessage("Hide save error: " + e.getMessage());
-        }
+        playerColony.save();
+        addMessage("Game saved on hide");
     }
 }

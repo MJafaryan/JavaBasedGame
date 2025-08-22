@@ -54,6 +54,14 @@ public class InputManager {
         }
     }
 
+    public void handleMouseScroll(float amountY) {
+        // کنترل زوم با اسکرول ماوس
+        float zoomChange = amountY * 0.1f;
+        camera.zoom = MathUtils.clamp(camera.zoom + zoomChange, 0.5f, 2.0f);
+        applyCameraBounds();
+        camera.update();
+    }
+
     private void applyCameraBounds() {
         // محاسبه مرزهای مجاز با توجه به زوم و اندازه viewport
         float effectiveViewportWidth = viewportWidth * camera.zoom;
