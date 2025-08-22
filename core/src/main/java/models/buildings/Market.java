@@ -34,8 +34,8 @@ public class Market extends Building {
     private int tradingBox;
     private Product[] products;
 
-    public Market(Texture texture, int x, int y, int width, int height, String ironMine, Colony colony) throws Exception {
-        super(texture , x, y, width, height, ironMine, colony);
+    public Market(Texture texture, int x, int y, int width, int height, String market, Colony colony) throws Exception {
+        super(texture, x, y, width, height, market, colony);
         JSONObject config = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
 
         payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
@@ -46,8 +46,9 @@ public class Market extends Building {
 
         for (int i = 0; i < this.products.length; i++) {
             String productName = Basics.WAREHOUSE[i];
-            int sellingPrice = (int) (long) SimplerJson.getDataFromJson(config, "sellingPrice_" + productName);
-            int buyingPrice = (int) (long) SimplerJson.getDataFromJson(config, "buyingPrice_" + productName);
+            System.out.println("Config :" + config);
+            int sellingPrice = (int) (long) SimplerJson.getDataFromJson(config, "sellingPrices_" + productName);
+            int buyingPrice = (int) (long) SimplerJson.getDataFromJson(config, "buyingPrices_" + productName);
             this.products[i] = new Product(productName, sellingPrice, buyingPrice);
         }
     }

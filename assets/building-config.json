@@ -61,13 +61,13 @@
     },
     "tradingBox": 5,
     "sellingPrices": {
-      "foods": 5,
+      "food": 5,
       "wood": 3,
       "stone": 8,
       "iron": 12
     },
     "buyingPrices": {
-      "foods": 6,
+      "food": 6,
       "wood": 4,
       "stone": 10,
       "iron": 14
@@ -122,7 +122,7 @@
         }
       },
       "fence": {
-        "influentialIn": "Health",
+        "influentialIn": "health",
         "count": 50,
         "cost": {
           "wood": 10,
