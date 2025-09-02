@@ -21,6 +21,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import models.user.Colony;
+import models.user.User;
 
 public class RegisterScreen implements Screen {
     private final MyGame game;
@@ -142,14 +144,14 @@ public class RegisterScreen implements Screen {
         checkBoxStyle.checkboxOn = createColoredDrawable(boxSize, 20, Color.GREEN);
 
         iran = new CheckBox("Iran", checkBoxStyle);
-        arab = new CheckBox("Arab" , checkBoxStyle);
+        arab = new CheckBox("Arab", checkBoxStyle);
         rome = new CheckBox("Rome", checkBoxStyle);
         mongol = new CheckBox("Mongol", checkBoxStyle);
 
-        iran.setPosition((float) (0.307*width), (float) (0.157*height));
-        arab.setPosition((float) (0.4*width), (float) (0.157*height));
-        rome.setPosition((float) (0.486*width),  (float) (0.157*height));
-        mongol.setPosition((float) (0.577*width),  (float) (0.157*height));
+        iran.setPosition((float) (0.307 * width), (float) (0.157 * height));
+        arab.setPosition((float) (0.4 * width), (float) (0.157 * height));
+        rome.setPosition((float) (0.486 * width), (float) (0.157 * height));
+        mongol.setPosition((float) (0.577 * width), (float) (0.157 * height));
 
         stage.addActor(iran);
         stage.addActor(arab);
@@ -163,10 +165,14 @@ public class RegisterScreen implements Screen {
         textFieldStyle.font = font;
         textFieldStyle.fontColor = Color.BLACK;
 
-        username = createTextField("", usernameFieldX, usernameFieldY, usernameFieldWidth, usernameFieldHeight, textFieldStyle);
-        password = createTextField("", passwordFieldX, passwordFieldY, passwordFieldWidth , passwordFieldHeight,textFieldStyle);
-        confirmPassword = createTextField("", confirmPasswordFieldX, confirmPasswordFieldY, confirmPasswordFieldWidth, confirmPasswordFieldHeight, textFieldStyle);
-        castleName = createTextField("", castelNameFieldX, castelNameFieldY, castelNameFieldWidth, castelNameFieldHeight, textFieldStyle);
+        username = createTextField("", usernameFieldX, usernameFieldY, usernameFieldWidth, usernameFieldHeight,
+                textFieldStyle);
+        password = createTextField("", passwordFieldX, passwordFieldY, passwordFieldWidth, passwordFieldHeight,
+                textFieldStyle);
+        confirmPassword = createTextField("", confirmPasswordFieldX, confirmPasswordFieldY, confirmPasswordFieldWidth,
+                confirmPasswordFieldHeight, textFieldStyle);
+        castleName = createTextField("", castelNameFieldX, castelNameFieldY, castelNameFieldWidth,
+                castelNameFieldHeight, textFieldStyle);
 
         password.setPasswordMode(true);
         password.setPasswordCharacter('*');
@@ -198,7 +204,6 @@ public class RegisterScreen implements Screen {
         shapeRenderer.rect(exitButtonX, exitButtonY, exitButtonWidth, exitButtonHeight);
         shapeRenderer.end();
 
-
         // Draw stage (text fields)
         stage.act(delta);
         stage.draw();
@@ -210,26 +215,45 @@ public class RegisterScreen implements Screen {
         if (Gdx.input.justTouched()) {
             Gdx.app.log("DEBUG", "کلیک در: X=" + touchX + ", Y=" + touchY);
 
-            if ((touchX >= exitButtonX && touchX <= exitButtonX + exitButtonWidth && touchY >= exitButtonY && touchY <= exitButtonY + exitButtonHeight )) {
+            if ((touchX >= exitButtonX && touchX <= exitButtonX + exitButtonWidth && touchY >= exitButtonY
+                    && touchY <= exitButtonY + exitButtonHeight)) {
                 Gdx.app.exit();
             }
 
-            if (touchX >= iranSymbolFieldX && touchX <= iranSymbolFieldX + iranSymbolFieldWidth && touchY >= iranSymbolFieldY && touchY <= iranSymbolFieldY + iranSymbolFieldHeight)
-                game.setScreen(new TribalInfoScrren(game , "IRAN"));
+            if (touchX >= iranSymbolFieldX && touchX <= iranSymbolFieldX + iranSymbolFieldWidth
+                    && touchY >= iranSymbolFieldY && touchY <= iranSymbolFieldY + iranSymbolFieldHeight)
+                game.setScreen(new TribalInfoScrren(game, "IRAN"));
 
-            if (touchX >= arabSymbolFieldX && touchX <= arabSymbolFieldX +arabSymbolFieldWidth && touchY >= arabSymbolFieldY && touchY <=arabSymbolFieldY + arabSymbolFieldHeight)
-                game.setScreen(new TribalInfoScrren(game , "ARAB"));
+            if (touchX >= arabSymbolFieldX && touchX <= arabSymbolFieldX + arabSymbolFieldWidth
+                    && touchY >= arabSymbolFieldY && touchY <= arabSymbolFieldY + arabSymbolFieldHeight)
+                game.setScreen(new TribalInfoScrren(game, "ARAB"));
 
-            if ((touchX >= romeSymbolFieldX && touchX <= romeSymbolFieldX + romeSymbolFieldWidth && touchY >= romeSymbolFieldY && touchY <= romeSymbolFieldY + romeSymbolFieldHeight))
-                game.setScreen(new TribalInfoScrren(game , "ROME"));
+            if ((touchX >= romeSymbolFieldX && touchX <= romeSymbolFieldX + romeSymbolFieldWidth
+                    && touchY >= romeSymbolFieldY && touchY <= romeSymbolFieldY + romeSymbolFieldHeight))
+                game.setScreen(new TribalInfoScrren(game, "ROME"));
 
-            if (touchX >= mughalSymbolFieldX && touchX <= mughalSymbolFieldX + mughalSymbolFieldWidth && touchY >= mughalSymbolFieldY && touchY <= mughalSymbolFieldY + mughalSymbolFieldHeight )
-                game.setScreen(new TribalInfoScrren(game , "MONGOL"));
+            if (touchX >= mughalSymbolFieldX && touchX <= mughalSymbolFieldX + mughalSymbolFieldWidth
+                    && touchY >= mughalSymbolFieldY && touchY <= mughalSymbolFieldY + mughalSymbolFieldHeight)
+                game.setScreen(new TribalInfoScrren(game, "MONGOL"));
 
+            if (touchX >= registrationButtonX && touchX <= registrationButtonX + registrationButtonWidth &&
+                    touchY >= registrationButtonY && touchY <= registrationButtonY + registrationButtonHeight) {
+                String userName = this.username.getText();
+                String password = this.password.getText();
+                String confirmPassword = this.confirmPassword.getText();
+                String ctlName = this.castleName.getText();
+                String civilization = getSelectedCivilization();
+
+                if (password.equals(confirmPassword)) {
+                    try {
+                        Colony colony = new Colony(new User(userName, password), civilization, ctlName);
+                        game.setScreen(new GameScreen(game, colony));
+                    } catch (Exception e) {
+                        // TODO: handle exception
+                    }
+                }
+            }
         }
-
-
-
     }
 
     public boolean keyDown(int keycode) {
@@ -276,10 +300,18 @@ public class RegisterScreen implements Screen {
     }
 
     public String getSelectedCivilization() {
-        if (iran.isChecked()) { return "Iran"; }
-        if (arab.isChecked()){ return "arab"; }
-        if (rome.isChecked()){ return "rome"; }
-        if (mongol.isChecked()){ return "mongol"; }
+        if (iran.isChecked()) {
+            return "Iran";
+        }
+        if (arab.isChecked()) {
+            return "arab";
+        }
+        if (rome.isChecked()) {
+            return "rome";
+        }
+        if (mongol.isChecked()) {
+            return "mongol";
+        }
         return "";
     }
 }

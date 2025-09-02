@@ -60,8 +60,9 @@ public class GameScreen implements Screen {
     private boolean hasTownHall = false;
     private boolean townHallPlaced = false;
 
-    public GameScreen(MyGame game) {
+    public GameScreen(MyGame game, Colony playerColony) {
         this.game = game;
+        this.playerColony = playerColony;
         try {
             initializeGame();
         } catch (Exception e) {
@@ -71,14 +72,7 @@ public class GameScreen implements Screen {
     }
 
     private void initializeGame() {
-        playerUser = new User("Player", "password");
-        try {
-            playerColony = new Colony("Player Colony", playerUser, "default", 10000, 5000);
-        } catch (IllegalArgumentException e) {
-            playerColony = new Colony(playerUser);
-        }
-
-        hasTownHall = playerColony.hasBuilding("townHall");
+        hasTownHall = playerColony.getImportantBuildings().get("townHall") != null;
 
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
