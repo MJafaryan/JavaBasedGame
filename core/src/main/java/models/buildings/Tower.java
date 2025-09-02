@@ -1,31 +1,26 @@
 package models.buildings;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import org.json.simple.JSONObject;
 
+import datastructures.HashMap;
 import datastructures.SimplerJson;
+import models.persons.Military;
 import models.user.Colony;
-import models.user.User;
 
 public class Tower extends Building {
-    private static JSONObject config;
     private JSONObject attachments;
     private boolean hasFence = false;
     private boolean hasFirePeat = false;
-    // TODO : adding Capacity of archers
-    // TODO : add picture to map
+    private Military[] archers;
 
-    static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "tower");
-    }
-
-    public Tower(Texture textrue , int x , int y , int height , int weigth , String type , Colony colony) throws Exception {
-        super(textrue , x , y ,height , weigth , "tower" , colony);
-        this.attachments = (JSONObject) SimplerJson.getDataFromJson(config, "attachments");
-
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
-
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
+    public Tower(Colony colony, Vector2 location, int height, int width) throws Exception {
+        super(colony, location, height, width, "tower");
+        JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "tower");
+        payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
+        this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");
+        this.attachments = (JSONObject) SimplerJson.getDataFromJson(buildingInfo, "attachments");
+        this.archers = new Military[(int) (long) SimplerJson.getDataFromJson(buildingInfo, "capacity")];
     }
 
     public void addFirePeat() throws Exception {
@@ -56,6 +51,24 @@ public class Tower extends Building {
         }
     }
 
-    public void addArcher() {
+    public void addArcher(Military archer) throws Exception {
+        for (int i = 0; i < this.archers.length; i++) {
+            if (this.archers[i] == null) {
+                this.archers[i] = archer;
+                return;
+            }
+        }
+        throw new Exception("The capacity of tower is full.");
+    }
+
+    @Override
+    public void destroy() {
+        HashMap<Building> buildings = this.colony.getBuildings();
+        buildings.delete(getID().toString());
+        this.colony.setBuildings(buildings);
+
+        for (Military archer : this.archers) {
+            archer.dead();
+        }
     }
 }

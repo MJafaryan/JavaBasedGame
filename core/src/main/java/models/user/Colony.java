@@ -1,382 +1,289 @@
 package models.user;
 
 import datastructures.HashMap;
-import java.io.Serializable;
-import java.io.FileInputStream;
+import datastructures.LinkedList;
+import datastructures.SimplerJson;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.json.simple.JSONObject;
 import models.Basics;
 import models.buildings.Building;
+import models.buildings.House;
 
-public class Colony implements Serializable {
-    private final static String SAVING_DIR = String.format("%s%s/", Basics.DATA_DIR, "saves");
-    private int timeCoefficient;
+public class Colony extends Thread {
+    private final static String SAVE_DIR = "data/saves/";
 
-    // The global info of a colony
-    private String name;
-    private String bread;
     private User leader;
+    private String bread;
+    private String colonyName;
+    private int timeConfidence;
+    private boolean isAlive;
+
+    // The recourses
     private int balance;
-
-    // The storage and resources of the colony
     private int storageCapacity;
-    private HashMap<Integer> resources;
-    private HashMap<Integer> incomes;
-    private int usingFoodByNPCs;
+    private HashMap<Integer> recourses;
 
-    // Buildings
-    private HashMap<Building> buildings;
-    private HashMap<String> importantBuildingsCode;
-
-    // NPCs
-    private int maximumPossiblePopulation;
+    // The citizens
     private int population;
-    private int workersPopulation;
-    private int militariesPopulation;
     private HashMap<Integer> militaries;
+    private int unemployedCitizens;
+    private int workersAmount;
 
-    // Constructors
-    public Colony(String name, User leader, String breed, int storageCapacity, int balance)
-        throws IllegalArgumentException {
-        if (Colony.load(leader.getUsername()) != null) {
-            throw new IllegalArgumentException("Colony already exists");
+    private static int workersFoodUsage;
+    private static int militariesFoodUsage;
+
+    // The buildings
+    private HashMap<Building> buildings;
+    private HashMap<Building> importantBuildings;
+    private LinkedList<House> emptyHouses;
+
+    static {
+        JSONObject config = SimplerJson.readJson("config/person-config.json");
+        workersFoodUsage = (int) (long) SimplerJson.getDataFromJson(config, "person_foodPer60Sec");
+        militariesFoodUsage = (int) (long) SimplerJson.getDataFromJson(config, "military_foodPer60Sec");
+    }
+
+    public Colony(User leader) throws Exception {
+        Colony colony = load(leader.getUsername());
+        if (colony == null) {
+            throw new Exception("This user isn't exist!");
+        } else if (!colony.getLeader().equals(leader)) {
+            throw new Exception("Password was wrong!");
         }
 
-        this.name = name;
+        this.isAlive = true;
+
+        this.leader = colony.getLeader();
+        this.bread = colony.getBread();
+        this.colonyName = colony.getColonyName();
+        this.timeConfidence = 1;
+
+        this.balance = colony.getBalance();
+        this.storageCapacity = colony.getStorageCapacity();
+        this.recourses = colony.getRecourses();
+
+        this.population = colony.getPopulation();
+        this.militaries = colony.getMilitaries();
+        this.unemployedCitizens = colony.getUnemployedCitizens();
+
+        this.buildings = colony.getBuildings();
+        this.importantBuildings = colony.getImportantBuildings();
+        this.emptyHouses = colony.getEmptyHouses();
+
+        this.workersAmount = colony.getWorkersAmount();
+    }
+
+    public Colony(User leader, String bread, String colonyName) throws Exception {
+        if (load(leader.getUsername()) != null) {
+            throw new Exception("A player with this username already exists!");
+        }
+
+        this.isAlive = true;
+
         this.leader = leader;
-        this.bread = breed;
-        this.storageCapacity = storageCapacity;
-        this.balance = balance;
-        this.resources = new HashMap<>();
-        this.incomes = new HashMap<>();
-        this.usingFoodByNPCs = 0;
-        this.buildings = new HashMap<>();
-        this.importantBuildingsCode = new HashMap<>();
-        this.maximumPossiblePopulation = 0;
+        this.bread = bread;
+        this.colonyName = colonyName;
+
+        this.timeConfidence = 1;
+        this.balance = 0;
+        this.storageCapacity = 0;
         this.population = 0;
-        this.workersPopulation = 0;
-        this.militariesPopulation = 0;
+        this.unemployedCitizens = 0;
+
+        this.recourses = new HashMap<>();
         this.militaries = new HashMap<>();
-        this.timeCoefficient = 1;
+        this.buildings = new HashMap<>();
+        this.importantBuildings = new HashMap<>();
+        this.emptyHouses = new LinkedList<>();
 
-        // Initialize all resources safely
-        initializeAllResources();
+        for (String material : Basics.WAREHOUSE) {
+            this.recourses.put(material, 0);
+        }
 
-        for (String unit : Basics.UNITS_NAME) {
-            this.militaries.put(unit, 0);
+        for (String unitName : Basics.UNITS_NAME) {
+            this.militaries.put(unitName, 0);
         }
 
         save();
     }
 
-    public Colony(User leader) throws IllegalArgumentException {
-        Colony colony = Colony.load(leader.getUsername());
-        if (colony == null) {
-            throw new IllegalArgumentException("Colony not found");
-        } else if (!colony.getLeader().equals(leader)) {
-            throw new IllegalArgumentException("Colony does not belong to this user");
-        } else {
-            this.name = colony.getName();
-            this.bread = colony.getBread();
-            this.leader = colony.getLeader();
-            this.storageCapacity = colony.getStorageCapacity();
-            this.balance = colony.getBalance();
-            this.resources = colony.getResources();
-            this.incomes = colony.getIncomes();
-            this.usingFoodByNPCs = colony.getUsingFoodByNPCs();
-            this.buildings = colony.getBuildings();
-            this.importantBuildingsCode = colony.getImportantBuildingsCode();
-            this.maximumPossiblePopulation = colony.getMaximumPossiblePopulation();
-            this.population = colony.getPopulation();
-            this.workersPopulation = colony.getWorkersPopulation();
-            this.militariesPopulation = colony.getMilitariesPopulation();
-            this.militaries = colony.getMilitaries();
-            this.timeCoefficient = colony.getTimeCoefficient();
-        }
-    }
-
-    // Initialize all possible resources with default value 0
-    private void initializeAllResources() {
-        // Initialize materials from Basics
-        for (String material : Basics.MATERIALS_NAME) {
-            this.resources.put(material, 0);
-            this.incomes.put(material, 0);
-        }
-
-        // Initialize common resources that might be used
-        String[] commonResources = {"wood", "stone", "gold", "iron", "food"};
-        for (String resource : commonResources) {
-            if (!this.resources.containsKey(resource)) {
-                this.resources.put(resource, 0);
-            }
-            if (!this.incomes.containsKey(resource)) {
-                this.incomes.put(resource, 0);
-            }
-        }
-    }
-
-    // Save and load colonies
-    public synchronized void save() {
-        try (FileOutputStream fileOut = new FileOutputStream(
-            String.format("%s%s.bin", SAVING_DIR, this.leader.getUsername()));
-             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+    private synchronized void save() {
+        try (FileOutputStream fileOut = new FileOutputStream(SAVE_DIR + this.leader.getUsername() + ".bin");
+                ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
             objectOut.writeObject(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static Colony load(String leaderName) {
+    private static Colony load(String leaderName) {
         try (FileInputStream fileIn = new FileInputStream(
-            String.format("%s%s.bin", SAVING_DIR, leaderName));
-             ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
+                String.format("%s%s.bin", SAVE_DIR, leaderName));
+                ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
             return (Colony) objectIn.readObject();
         } catch (IOException | ClassNotFoundException e) {
             return null;
         }
     }
 
-    // Getters
-    public User getLeader() {
-        return this.leader;
+    public void defeat() {
+        this.isAlive = false;
+        File saveFile = new File(SAVE_DIR + this.leader.getUsername() + ".bin");
+        saveFile.delete();
+        try {
+            ObjectOutputStream lootsFile = new ObjectOutputStream(new FileOutputStream("data/loots.bin"));
+            HashMap<Integer> loots = this.recourses;
+            loots.put("coin", this.balance);
+            lootsFile.writeObject(loots);
+            lootsFile.close();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
     }
 
-    public String getName() {
-        return this.name;
+    public synchronized void updateRecourse(String recourseName, int amount) throws Exception {
+        if (amount < 0 && (amount * -1) > getRecourse(recourseName)) {
+            throw new Exception("No enough recourse " + recourseName);
+        } else if (recourseName.equals("coin")) {
+            this.balance += amount;
+        } else if (amount > getRemainingStorageCapacity()) {
+            this.recourses.put(recourseName, this.recourses.get(recourseName) + getRemainingStorageCapacity());
+        } else {
+            this.recourses.put(recourseName, this.recourses.get(recourseName) + amount);
+        }
+    }
+
+    public void addBuilding(Building building) {
+        this.buildings.put(building.getID().toString(), building);
+    }
+
+    public void addEmptyHouse(House house) {
+        this.emptyHouses.addNode(house);
+    }
+
+    public void addImportantBuilding(String name, Building building) {
+        this.importantBuildings.put(name, building);
+    }
+
+    @Override
+    public void run() {
+        try {
+            while (this.isAlive) {
+                updateRecourse("food",
+                (getMilitariesAmount() * militariesFoodUsage + this.workersAmount * workersFoodUsage));
+                save();
+
+                Thread.sleep(Basics.BASE_TIME_PERIOD / this.getTimeConfidence());
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    // getters
+    public User getLeader() {
+        return this.leader;
     }
 
     public String getBread() {
         return this.bread;
     }
 
-    public int getStorageCapacity() {
-        return this.storageCapacity;
+    public String getColonyName() {
+        return this.colonyName;
+    }
+
+    public int getTimeConfidence() {
+        return this.timeConfidence;
     }
 
     public int getBalance() {
         return this.balance;
     }
 
-    public HashMap<Integer> getResources() {
-        return this.resources;
+    public int getStorageCapacity() {
+        return this.storageCapacity;
     }
 
-    public HashMap<Integer> getIncomes() {
-        return this.incomes;
-    }
-
-    public int getUsingFoodByNPCs() {
-        return this.usingFoodByNPCs;
-    }
-
-    public HashMap<Building> getBuildings() {
-        return this.buildings;
-    }
-
-    public int getMaximumPossiblePopulation() {
-        return this.maximumPossiblePopulation;
+    public HashMap<Integer> getRecourses() {
+        return this.recourses;
     }
 
     public int getPopulation() {
         return this.population;
     }
 
-    public int getWorkersPopulation() {
-        return this.workersPopulation;
-    }
+    public int getRemainingStorageCapacity() {
+        int amount = this.storageCapacity;
+        for (String material : Basics.MATERIALS_NAME) {
+            amount -= getRecourse(material);
+        }
 
-    public int getMilitariesPopulation() {
-        return this.militariesPopulation;
+        return amount;
     }
 
     public HashMap<Integer> getMilitaries() {
         return this.militaries;
     }
 
-    public int getTimeCoefficient() {
-        return this.timeCoefficient;
+    public int getUnemployedCitizens() {
+        return this.unemployedCitizens;
     }
 
-    public HashMap<String> getImportantBuildingsCode() {
-        return this.importantBuildingsCode;
+    public HashMap<Building> getBuildings() {
+        return this.buildings;
     }
 
-    // Special getters
-    public int getUsedCapacity() {
-        int usedCapacity = 0;
-        for (String material : Basics.WAREHOUSE) {
-            Integer amount = this.resources.get(material);
-            if (amount != null) {
-                usedCapacity += amount;
-            }
-        }
-        return usedCapacity;
+    public HashMap<Building> getImportantBuildings() {
+        return this.importantBuildings;
     }
 
-    public int getMaterial(String materialName) {
-        if (materialName.equals("coin")) {
+    public int getRecourse(String recourseName) {
+        if (recourseName.equals("coin")) {
             return this.balance;
-        } else {
-            Integer value = this.resources.get(materialName);
-            if (value == null) {
-                // If resource doesn't exist, create it and return 0
-                this.resources.put(materialName, 0);
-                return 0;
-            }
-            return value;
         }
+        return this.recourses.get(recourseName);
     }
 
-    public Building getBuilding(String id) {
-        return this.buildings.get(id);
+    public int getWorkersAmount() {
+        return this.workersAmount;
     }
 
-    // Check if resource exists
-    public boolean hasResource(String resourceName) {
-        if (resourceName.equals("coin")) {
-            return true;
+    public int getMilitariesAmount() {
+        int amount = 0;
+        for (String unit : Basics.UNITS_NAME) {
+            amount += this.militaries.get(unit);
         }
-        return this.resources.containsKey(resourceName);
+
+        return amount;
+    }
+
+    public LinkedList<House> getEmptyHouses() {
+        return this.emptyHouses;
     }
 
     // Setters
-    public void setStorageCapacity(int storageCapacity) {
-        this.storageCapacity = storageCapacity;
+    public void setEmptyHouses(LinkedList<House> newList) {
+        this.emptyHouses = newList;
     }
 
-    public void setBalance(int balance) {
-        this.balance = balance;
+    public void setBuildings(HashMap<Building> buildings) {
+        this.buildings = buildings;
     }
 
-    public void setUsingFoodByNPCs(int amount) {
-        this.usingFoodByNPCs = amount;
+    public void setPopulation(int amount) {
+        this.population = amount;
     }
 
-    public void setMaximumPossiblePopulation(int maximumPossiblePopulation) {
-        this.maximumPossiblePopulation = maximumPossiblePopulation;
+    public void setImportantBuildings(HashMap<Building> importantBuildings) {
+        this.importantBuildings = importantBuildings;
     }
 
-    public void setPopulation(int population) {
-        this.population = population;
-    }
-
-    public void setWorkersPopulation(int workersPopulation) {
-        this.workersPopulation = workersPopulation;
-    }
-
-    public void setMilitariesPopulation(int militariesPopulation) {
-        this.militariesPopulation = militariesPopulation;
-    }
-
-    public void setImportantBuildingsCode(HashMap<String> newHashMap) {
-        this.importantBuildingsCode = newHashMap;
-    }
-
-    // Special setters
-    public void setResource(String material, int amount) throws IllegalArgumentException {
-        if (!Basics.exists(Basics.WAREHOUSE, material)) {
-            throw new IllegalArgumentException("Invalid material: " + material);
-        }
-        this.resources.put(material, amount);
-    }
-
-    public void setIncome(String material, int amount) throws IllegalArgumentException {
-        if (!Basics.exists(Basics.MATERIALS_NAME, material)) {
-            throw new IllegalArgumentException("Invalid material: " + material);
-        }
-        this.incomes.put(material, amount);
-    }
-
-    public void setMilitary(String type, int amount) throws IllegalArgumentException {
-        if (!Basics.exists(Basics.UNITS_NAME, type)) {
-            throw new IllegalArgumentException("Invalid military type: " + type);
-        }
-        this.militaries.put(type, amount);
-    }
-
-    public void setImportantBuilding(String name, String key) {
-        this.importantBuildingsCode.put(name, key);
-    }
-
-    // Other functions
-    public synchronized void updateResourceAmount(String resourceName, int amount)
-        throws IllegalArgumentException {
-        if (!resourceName.equals("coin")) {
-            // Ensure resource exists
-            if (!this.resources.containsKey(resourceName)) {
-                this.resources.put(resourceName, 0);
-            }
-
-            int currentAmount = this.resources.get(resourceName);
-
-            if (amount > 0 && amount > this.storageCapacity - getUsedCapacity()) {
-                this.resources.put(resourceName, this.storageCapacity - getUsedCapacity());
-            } else if (amount < 0 && Math.abs(amount) > currentAmount) {
-                throw new IllegalArgumentException("Insufficient resources: " + resourceName);
-            } else {
-                this.resources.put(resourceName, currentAmount + amount);
-            }
-        } else if (amount < 0 && Math.abs(amount) > this.balance) {
-            throw new IllegalArgumentException("Insufficient balance");
-        } else {
-            this.balance += amount;
-        }
-    }
-
-
-
-    public synchronized void addBuilding(Building newBuilding) {
-        this.buildings.put(newBuilding.getID().toString(), newBuilding);
-    }
-
-    // Safe method to get material with default value
-    public int getMaterialSafe(String materialName, int defaultValue) {
-        if (materialName.equals("coin")) {
-            return this.balance;
-        } else {
-            Integer value = this.resources.get(materialName);
-            return value != null ? value : defaultValue;
-        }
-    }
-
-    // Safe method to update resource with null check
-    public synchronized boolean safeUpdateResource(String resourceName, int amount) {
-        try {
-            updateResourceAmount(resourceName, amount);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        } catch (NullPointerException e) {
-            // If resource doesn't exist, create it and try again
-            if (!resourceName.equals("coin")) {
-                this.resources.put(resourceName, 0);
-                try {
-                    updateResourceAmount(resourceName, amount);
-                    return true;
-                } catch (Exception ex) {
-                    return false;
-                }
-            }
-            return false;
-        }
-    }
-    public boolean hasBuilding(String buildingType) {
-        // از طریق کلیدها جستجو کنید
-        for (String key : getBuildingKeys()) {
-            Building building = buildings.get(key);
-            if (building != null && building.getType().equals(buildingType)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private List<String> getBuildingKeys() {
-        List<String> keys = new ArrayList<>();
-        return keys;
+    public void setStorageCapacity(int newCapacity) {
+        this.storageCapacity = newCapacity;
     }
 }

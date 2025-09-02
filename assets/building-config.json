@@ -134,6 +134,7 @@
   "farms": {
     "farm": {
       "health": 300,
+      "outputMaterial": "food",
       "lvl1": {
         "cost": {
           "wood": 15,
@@ -158,6 +159,7 @@
     },
     "animalHusbandry": {
       "health": 325,
+      "outputMaterial": "food",
       "lvl1": {
         "cost": {
           "wood": 20,
@@ -182,6 +184,7 @@
     },
     "lumbering": {
       "health": 350,
+      "outputMaterial": "wood",
       "lvl1": {
         "cost": {
           "coin": 8
@@ -205,6 +208,7 @@
     },
     "stoneMine": {
       "health": 850,
+      "outputMaterial": "stone",
       "lvl1": {
         "cost": {
           "wood": 15,
@@ -232,6 +236,7 @@
     },
     "ironMine": {
       "health": 950,
+      "outputMaterial": "iron",
       "lvl1": {
         "cost": {
           "wood": 25,
@@ -261,6 +266,7 @@
     },
     "goldMine": {
       "health": 500,
+      "outputMaterial": "coin",
       "lvl1": {
         "cost": {
           "stone": 8,

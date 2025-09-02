@@ -1,28 +1,26 @@
 package models.buildings;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import org.json.simple.JSONObject;
+import datastructures.LinkedList;
 import datastructures.SimplerJson;
 import models.user.Colony;
 import models.Basics;
 import models.persons.*;
 
 public class House extends Building implements Runnable {
-    private int maxPopulation;
     private int population;
+    private int usedPopulation;
     private Person[] personsArray;
 
-    public House(Texture texture, int x , int y , int wi, int height, String type, Colony colony) throws Exception {
-        super(texture, x, y, wi, height, type, colony);
-        JSONObject config = (JSONObject) SimplerJson.getDataFromJson(configFile, "house");
-
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
-
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
-        this.maxPopulation = (int) (long) SimplerJson.getDataFromJson(config, "capacity");
-        this.colony.setMaximumPossiblePopulation(this.maxPopulation + this.colony.getMaximumPossiblePopulation());
-        this.personsArray = new Person[this.maxPopulation];
+    public House(Colony colony, Vector2 location, int height, int width) throws Exception {
+        super(colony, location, height, width, "house");
+        JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "house");
+        payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
+        this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");
+        this.personsArray = new Person[(int) (long) SimplerJson.getDataFromJson(buildingInfo, "capacity")];
         this.population = 0;
+        this.colony.addEmptyHouse(this);
     }
 
     public int getPopulation() {
@@ -41,15 +39,36 @@ public class House extends Building implements Runnable {
         this.personsArray[this.population] = person;
     }
 
+    public void destroy() {
+        deleteFromBuildings();
+        for (Person person : this.personsArray) {
+            person.setHouse(null);
+            person.dead();
+        }
+        this.colony.setPopulation(this.colony.getPopulation() - this.usedPopulation);
+        this.isAlive = false;
+    }
+
     @Override
     public void run() {
-        while (this.population < this.maxPopulation) {
-            this.population++;
-            this.colony.setPopulation(this.colony.getPopulation() + 1);
+        while (this.isAlive) {
+            while (this.population < this.personsArray.length) {
+                synchronized (this) {
+                    this.population++;
+                    this.colony.setPopulation(this.colony.getPopulation() + 1);
+                }
+            }
+
+            if (this.usedPopulation == 6) {
+                LinkedList<House> emptyHouses = colony.getEmptyHouses();
+                emptyHouses.deleteNode(this);
+                colony.setEmptyHouses(emptyHouses);
+            }
+
             try {
-                Thread.sleep(Basics.BASE_TIME_PERIOD / this.colony.getTimeCoefficient());
+                Thread.sleep(Basics.BASE_TIME_PERIOD / this.colony.getTimeConfidence());
             } catch (Exception e) {
-                // TODO: handle the exception
+                e.printStackTrace();
             }
         }
     }

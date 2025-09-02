@@ -1,35 +1,49 @@
 package models.buildings;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import org.json.simple.JSONObject;
+import datastructures.HashMap;
 import datastructures.SimplerJson;
 import models.user.Colony;
 import java.util.Random;
 
 public class Hospital extends Building {
-    private static JSONObject config;
+    private int findCureCost;
+    private float findingCureChance;
+    private int healHeroCost;
 
-    static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "hospital");
-    }
+    public Hospital(Colony colony, Vector2 location, int height, int width) throws Exception {
+        super(colony, location, height, width, "hospital");
 
-    public Hospital(Texture texture, int x, int y, int width, int height, String hospital, Colony colony) throws Exception {
-        super(texture , x, y, width, height, hospital, colony);
+        JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "hospital");
+        payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
+        this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");
+        this.healHeroCost = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "findingCureForDiseaseCost");
+        this.findingCureChance = (float) (double) SimplerJson.getDataFromJson(buildingInfo, "findingCureForDiseaseChance");
+        this.healHeroCost = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "heroTreatmentCost");
 
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
+        colony.addImportantBuilding("hospital", this);
     }
 
     public boolean findCureForDisease() throws Exception {
-        this.colony.updateResourceAmount("coin",
-                (int) (long) SimplerJson.getDataFromJson(config, "findingCureForDiseaseCost"));
+        this.colony.updateRecourse("coin", this.findCureCost);
         Random random = new Random();
-        return random.nextDouble() <= (double) SimplerJson.getDataFromJson(config, "findingCureForDiseaseChance");
+        return random.nextDouble() <= this.findingCureChance;
     }
 
-    public void healHero() throws Exception {
-        this.colony.updateResourceAmount("coin", (int) (long) SimplerJson.getDataFromJson(config, "heroTreatmentCost"));
+        public void healHero() throws Exception {
+        this.colony.updateRecourse("coin", this.healHeroCost);
         // TODO: Other parts of healing process
+    }
+
+    @Override
+    public void destroy() {
+        HashMap<Building> importantBuildings = this.colony.getImportantBuildings();
+        HashMap<Building> buildings = this.colony.getBuildings();
+        importantBuildings.delete("hospital");
+        buildings.delete(getID().toString());
+        this.colony.setBuildings(buildings);
+        this.colony.setImportantBuildings(importantBuildings);
     }
 }

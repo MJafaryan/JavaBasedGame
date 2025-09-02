@@ -1,7 +1,8 @@
 package models.buildings;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import org.json.simple.JSONObject;
+import datastructures.HashMap;
 import datastructures.SimplerJson;
 import models.Basics;
 import models.user.Colony;
@@ -34,37 +35,33 @@ public class Market extends Building {
     private int tradingBox;
     private Product[] products;
 
-    public Market(Texture texture, int x, int y, int width, int height, String market, Colony colony) throws Exception {
-        super(texture, x, y, width, height, market, colony);
-        JSONObject config = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
+    public Market(Colony colony, Vector2 location, int height, int width) throws Exception {
+        super(colony, location, height, width, "market");
+        JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
+        payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
+        this.colony.addImportantBuilding("market", this);
+        this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");
+        this.tradingBox = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "tradingBox");
+        this.products = new Product[Basics.WAREHOUSE.length];
 
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
-        this.tradingBox = (int) (long) SimplerJson.getDataFromJson(config, "tradingBox");
-        this.products = new Product[4];
-
-        for (int i = 0; i < this.products.length; i++) {
-            String productName = Basics.WAREHOUSE[i];
-            System.out.println("Config :" + config);
-            int sellingPrice = (int) (long) SimplerJson.getDataFromJson(config, "sellingPrices_" + productName);
-            int buyingPrice = (int) (long) SimplerJson.getDataFromJson(config, "buyingPrices_" + productName);
-            this.products[i] = new Product(productName, sellingPrice, buyingPrice);
+        for (int i = 0; i < Basics.WAREHOUSE.length; i++) {
+            this.products[i] = new Product(Basics.WAREHOUSE[i],
+                    (int) (long) SimplerJson.getDataFromJson(buildingInfo,
+                            String.format("sellingPrices_%s", Basics.WAREHOUSE[i])),
+                    (int) (long) SimplerJson.getDataFromJson(buildingInfo,
+                            String.format("buyingPrice_%s", Basics.WAREHOUSE[i])));
         }
     }
 
-    public void sellProduct(String productName, int amount) throws Exception {
-        amount *= this.tradingBox;
-        for (Product product : products) {
-            if (product.getName().equals(productName)) {
-                if (amount > this.colony.getMaterial(productName)) {
-                    throw new Exception("Not enough " + productName + " in colony");
-                }
-
-                this.colony.updateResourceAmount(productName, amount * -1);
-                this.colony.updateResourceAmount("coin", amount * product.getSellingPrice());
-            }
-        }
+    @Override
+    public void destroy() {
+        HashMap<Building> importantBuildings = this.colony.getImportantBuildings();
+        HashMap<Building> buildings = this.colony.getBuildings();
+        importantBuildings.delete("hospital");
+        buildings.delete(getID().toString());
+        this.colony.setImportantBuildings(importantBuildings);
+        this.colony.setBuildings(buildings);
     }
 
     public void buyProduct(String productName, int amount) throws Exception {
@@ -75,8 +72,24 @@ public class Market extends Building {
                     throw new Exception("Not enough coins in colony");
                 }
 
-                this.colony.updateResourceAmount(productName, amount);
-                this.colony.updateResourceAmount("coin", amount * product.getBuyingPrice() * -1);
+                this.colony.updateRecourse(productName, amount);
+                this.colony.updateRecourse("coin", amount * -1);
+                return;
+            }
+        }
+    }
+
+    public void sellProduct(String productName, int amount) throws Exception {
+        amount *= this.tradingBox;
+        for (Product product : products) {
+            if (product.getName().equals(productName)) {
+                if (amount < this.colony.getRecourse(productName)) {
+                    throw new Exception("Not enough coins in colony");
+                }
+
+                this.colony.updateRecourse(productName, amount * -1);
+                this.colony.updateRecourse("coin", amount * product.getSellingPrice());
+                return;
             }
         }
     }

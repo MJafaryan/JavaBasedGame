@@ -14,4 +14,8 @@ public class Worker extends Person {
     public Building getWorkingPlace() {
         return this.workspaceBuilding;
     }
+
+    public void setWorkSpace(Building workingPlace) {
+        this.workspaceBuilding = workingPlace;
+    }
 }

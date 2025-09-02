@@ -1,9 +1,10 @@
 package models.buildings;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import models.Basics;
 import models.user.Colony;
 import org.json.simple.JSONObject;
@@ -12,33 +13,57 @@ import datastructures.SimplerJson;
 import java.util.UUID;
 
 public abstract class Building  {
-    protected UUID id;
+    public final class Coordinates {
+        private Vector2 location;
+        private int height;
+        private int width;
+
+        public Coordinates(int xAssist, int yAssist, int height, int width) {
+            this(new Vector2(xAssist, yAssist), height, width);
+        }
+
+        public Coordinates(Vector2 location, int height, int width) {
+            this.location = location;
+            this.height = height;
+            this.width = width;
+        }
+
+        public Vector2 getLocation() {
+            return this.location;
+        }
+
+        public int getHeight() {
+            return this.height;
+        }
+
+        public int getWidth() {
+            return this.width;
+        }
+    }
+
+    private UUID id;
     protected Texture texture;
-    protected Vector2 position;
-    protected int width;
-    protected int height;
-    protected String type;
+    protected Coordinates coordinates;
     protected int health;
     protected Colony colony;
-    public static JSONObject configFile;
+    protected static JSONObject configFile;
+    protected boolean isAlive;
 
     static {
-        configFile = SimplerJson.readJson(String.format("building-config.json",
-                Basics.DATA_DIR));
+        configFile = SimplerJson.readJson("config/building-config.json");
     }
 
-    public Building(Texture texture,int x , int y , int width , int height, String type , Colony colony) { // TODO: deploy map logic
+    public Building(Colony colony, Vector2 location, int height, int width, String buildingName) {
         this.id = UUID.randomUUID();
-        this.texture = texture;
-        this.position = new Vector2(x, y);
-        this.width = width;
-        this.height = height;
-        this.type = type;
-        this.health = health;
+        this.texture = loadTexture(buildingName);
+        this.coordinates = new Coordinates(location, height, width);
         this.colony = colony;
-        this.colony.addBuilding(this);
+        this.isAlive = true;
+
+        colony.addBuilding(this);
     }
 
+    public abstract void destroy();
 
     public int getHealth() {
         return health;
@@ -52,10 +77,33 @@ public abstract class Building  {
         return this.id;
     }
 
-    public String getType() { return this.type; }
+    public Coordinates getCoordinates() {
+        return this.coordinates;
+    }
 
     public void takeDamage(int damage) {
         health -= damage;
+    }
+
+    protected void deleteFromBuildings() {
+        HashMap<Building> buildingsHashMap = this.colony.getBuildings();
+        buildingsHashMap.delete(getID().toString());
+        this.colony.setBuildings(buildingsHashMap);
+    }
+
+    private static Texture loadTexture(String buildingName) {
+        String path = String.format("texture/%s-texture.png", buildingName.toLowerCase());
+        try {
+            return new Texture(Gdx.files.internal(path));
+        } catch (Exception e) {
+            Gdx.app.error("Texture", "Failed to load: " + path);
+            Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
+            pixmap.setColor(Color.MAGENTA);
+            pixmap.fill();
+            Texture texture = new Texture(pixmap);
+            pixmap.dispose();
+            return texture;
+        }
     }
 
     public void payCost(JSONObject costsJSON) throws Exception {
@@ -70,23 +118,28 @@ public abstract class Building  {
 
         for (String material : Basics.MATERIALS_NAME) {
             if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > this.colony.getMaterial(material)) {
+                    && requiredMaterials.get(material) > this.colony.getRecourse(material)) {
                 throw new Exception("No enough " + material);
             }
         }
 
         for (String material : Basics.MATERIALS_NAME) {
             if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
+                this.colony.updateRecourse(material, requiredMaterials.get(material) * -1);
             }
         }
     }
 
-    public Vector2 getPosition() {
-        return position;
-    }
-
-    public Texture getTexture() {
-        return texture;
+    @Override
+    public boolean equals(Object object) {
+        try {
+            Building building = (Building) object;
+            if (building.getID().equals(this.id)) {
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
     }
 }

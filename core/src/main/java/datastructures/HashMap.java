@@ -54,6 +54,10 @@ public class HashMap<T> implements Serializable {
         return null;
     }
 
+    public int getLength() {
+        return this.nodesList.getLength();
+    }
+
     public void delete(String key) {
         Node deletingNode = new Node(key);
         nodesList.deleteNode(deletingNode);
