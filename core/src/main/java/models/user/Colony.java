@@ -35,7 +35,7 @@ public class Colony extends Thread {
     private int workersAmount;
 
     private static int workersFoodUsage;
-    private static int militariesFoodUsage;
+    private static double militariesFoodUsage;
 
     // The buildings
     private HashMap<Building> buildings;
@@ -43,9 +43,9 @@ public class Colony extends Thread {
     private LinkedList<House> emptyHouses;
 
     static {
-        JSONObject config = SimplerJson.readJson("config/person-config.json");
+        JSONObject config = SimplerJson.readJson("config/persons-config.json");
         workersFoodUsage = (int) (long) SimplerJson.getDataFromJson(config, "person_foodPer60Sec");
-        militariesFoodUsage = (int) (long) SimplerJson.getDataFromJson(config, "military_foodPer60Sec");
+        militariesFoodUsage = (double) SimplerJson.getDataFromJson(config, "military_foodPer60Sec");
     }
 
     public Colony(User leader) throws Exception {
@@ -175,7 +175,7 @@ public class Colony extends Thread {
         try {
             while (this.isAlive) {
                 updateRecourse("food",
-                (getMilitariesAmount() * militariesFoodUsage + this.workersAmount * workersFoodUsage));
+                        (int) (getMilitariesAmount() * militariesFoodUsage + this.workersAmount * workersFoodUsage));
                 save();
 
                 Thread.sleep(Basics.BASE_TIME_PERIOD / this.getTimeConfidence());

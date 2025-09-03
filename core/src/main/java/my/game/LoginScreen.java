@@ -89,7 +89,6 @@ public class LoginScreen implements Screen {
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
 
-
         stage.addActor(usernameField);
         stage.addActor(passwordField);
     }
@@ -113,27 +112,29 @@ public class LoginScreen implements Screen {
         if (Gdx.input.justTouched()) {
             int touchX = Gdx.input.getX();
             int touchY = height - Gdx.input.getY();
-//            Gdx.app.log("DEBUG", "کلیک در: X=" + touchX + ", Y=" + touchY);
-//
-//            if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.CONTROL_LEFT) &&
-//                Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.D)) {
-//                debugMode = !debugMode;
-//                Gdx.app.log("DEBUG", "حالت دیباگ: " + debugMode);
-//            }
+            // Gdx.app.log("DEBUG", "کلیک در: X=" + touchX + ", Y=" + touchY);
+            //
+            // if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.CONTROL_LEFT) &&
+            // Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.D)) {
+            // debugMode = !debugMode;
+            // Gdx.app.log("DEBUG", "حالت دیباگ: " + debugMode);
+            // }
 
             if (touchX >= loginToGameButtonX && touchX <= loginToGameButtonX + loginToGameButtonWidth
-                && touchY >= loginToGameButtonY && touchY <= loginToGameButtonY + loginToGameButtonHeight) {
+                    && touchY >= loginToGameButtonY && touchY <= loginToGameButtonY + loginToGameButtonHeight) {
                 try {
                     Colony colony = new Colony(new User(this.usernameField.getText(), this.passwordField.getText()));
+                    System.out.println(colony);
                     game.setScreen(new GameScreen(game, colony));
                 } catch (Exception e) {
+                    e.printStackTrace();
                     // TODO: handle exception
                 }
             }
 
             if (touchX >= registerButtonX && touchY >= registerButtonY
-                && touchX <= registerButtonX + registerButtonWidth
-                && touchY <= registerButtonY + registerButtonHeight) {
+                    && touchX <= registerButtonX + registerButtonWidth
+                    && touchY <= registerButtonY + registerButtonHeight) {
                 game.setScreen(new RegisterScreen(game));
                 Gdx.app.log("Login", "click in register");
                 dispose();
@@ -141,7 +142,7 @@ public class LoginScreen implements Screen {
             }
             // مختصات دکمه خروج (تنظیم بر اساس نیاز شما)
             if (touchX >= exitButtonX && touchX <= exitButtonX + exitButtonWidth &&
-                touchY >= exitButtonY && touchY <= exitButtonY + exitButtonHeight) {
+                    touchY >= exitButtonY && touchY <= exitButtonY + exitButtonHeight) {
                 Gdx.app.exit();
             }
         }
