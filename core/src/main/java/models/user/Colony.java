@@ -112,7 +112,7 @@ public class Colony extends Thread {
         save();
     }
 
-    private synchronized void save() {
+    public synchronized void save() {
         try (FileOutputStream fileOut = new FileOutputStream(SAVE_DIR + this.leader.getUsername() + ".bin");
                 ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
             objectOut.writeObject(this);

@@ -81,6 +81,14 @@ public abstract class Building  {
         return this.coordinates;
     }
 
+    public Texture getTexture() {
+        return texture;
+    }
+
+    public static JSONObject getConfigFile() {
+        return configFile;
+    }
+
     public void takeDamage(int damage) {
         health -= damage;
     }

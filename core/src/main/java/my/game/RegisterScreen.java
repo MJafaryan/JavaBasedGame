@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle;
@@ -21,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import models.Basics;
 import models.user.Colony;
 import models.user.User;
 
@@ -247,6 +247,7 @@ public class RegisterScreen implements Screen {
                 if (password.equals(confirmPassword)) {
                     try {
                         Colony colony = new Colony(new User(userName, password), civilization, ctlName);
+                        colony = initializeColonyResources(colony);
                         game.setScreen(new GameScreen(game, colony));
                     } catch (Exception e) {
                         // TODO: handle exception
@@ -313,5 +314,16 @@ public class RegisterScreen implements Screen {
             return "mongol";
         }
         return "";
+    }
+
+    private Colony initializeColonyResources(Colony colony) {
+        try {
+            for (String resource : Basics.WAREHOUSE) {
+                colony.updateRecourse(resource, 50);
+            }
+            colony.updateRecourse("coin", 500);
+        } catch (Exception e) {
+        }
+        return colony;
     }
 }
