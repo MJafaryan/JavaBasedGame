@@ -247,7 +247,6 @@ public class RegisterScreen implements Screen {
                 if (password.equals(confirmPassword)) {
                     try {
                         Colony colony = new Colony(new User(userName, password), civilization, ctlName);
-                        colony = initializeColonyResources(colony);
                         game.setScreen(new GameScreen(game, colony));
                     } catch (Exception e) {
                         // TODO: handle exception
@@ -302,7 +301,7 @@ public class RegisterScreen implements Screen {
 
     public String getSelectedCivilization() {
         if (iran.isChecked()) {
-            return "Iran";
+            return "iran";
         }
         if (arab.isChecked()) {
             return "arab";
@@ -314,16 +313,5 @@ public class RegisterScreen implements Screen {
             return "mongol";
         }
         return "";
-    }
-
-    private Colony initializeColonyResources(Colony colony) {
-        try {
-            for (String resource : Basics.WAREHOUSE) {
-                colony.updateRecourse(resource, 50);
-            }
-            colony.updateRecourse("coin", 500);
-        } catch (Exception e) {
-        }
-        return colony;
     }
 }

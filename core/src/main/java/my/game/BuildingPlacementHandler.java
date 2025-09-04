@@ -140,7 +140,7 @@ public class BuildingPlacementHandler {
         switch (type) {
             case "townHall": return new TownHall(gameScreen.getPlayerColony(), new Vector2(x, y), size, size);
             case "house": return new House(gameScreen.getPlayerColony(), new Vector2(x, y), size, size);
-            case "barracks": return new Barracks(gameScreen.getPlayerColony(), new Vector2(x, y), size, size); // TODO: deploy barracks again
+            case "barracks": return new Barracks(gameScreen.getPlayerColony(), new Vector2(x, y), size, size);
             case "hospital": return new Hospital(gameScreen.getPlayerColony(), new Vector2(x, y), size, size);
             case "farm": case "stone": case "gold": case "iron": case "husbandry": case "lumbering":
                 return new Mine(gameScreen.getPlayerColony(), new Vector2(x, y), size, size, type);
