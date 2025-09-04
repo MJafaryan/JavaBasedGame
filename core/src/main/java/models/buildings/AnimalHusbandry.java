@@ -15,14 +15,16 @@ public class AnimalHusbandry extends Building implements Upgradable {
 
     public AnimalHusbandry(Texture texture, int x, int y, int width, int height, String animalHusbandry, Colony colony) throws Exception {
         super(texture , x, y, width, height, animalHusbandry, colony);
-
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
-
+        this.maxLevel = 3;
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
         int income = (int) (long) SimplerJson.getDataFromJson(config, "lvl1_output");
         this.colony.setIncome("food", colony.getIncomes().get("food") + income);
     }
+
+    public int getLvl() { return lvl; }
+
+    public int getMaxLevel() { return maxLevel; }
 
     public void upgrade() throws Exception {
         JSONObject newlvl = null;
@@ -30,10 +32,6 @@ public class AnimalHusbandry extends Building implements Upgradable {
         if (lvl < 3) {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
-
-
-        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "cost"));
-
         // Set Changes:
         this.lvl++;
         this.colony.setIncome("food",

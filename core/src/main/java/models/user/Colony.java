@@ -1,22 +1,35 @@
 package models.user;
 
 import datastructures.HashMap;
-import java.io.Serializable;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import datastructures.SimplerJson;
 import models.Basics;
 import models.buildings.Building;
+import org.json.simple.JSONObject;
 
 public class Colony implements Serializable {
     private final static String SAVING_DIR = String.format("%s%s/", Basics.DATA_DIR, "saves");
+    public static JSONObject config;
     private int timeCoefficient;
-
+    static {
+        try {
+            config = SimplerJson.readJson("persons-config.json");
+            System.out.println("Config loaded successfully: " + (config != null));
+            if (config != null) {
+                System.out.println("Config structure: " + config.toJSONString());
+            } else {
+                System.err.println("Config is null!");
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading config: " + e.getMessage());
+            e.printStackTrace();
+            config = new JSONObject();
+        }
+    }
     // The global info of a colony
     private String name;
     private String bread;
@@ -41,7 +54,7 @@ public class Colony implements Serializable {
     private HashMap<Integer> militaries;
 
     // Constructors
-    public Colony(String name, User leader, String breed, int storageCapacity, int balance)
+    public Colony(String name, User leader, String breed)
         throws IllegalArgumentException {
         if (Colony.load(leader.getUsername()) != null) {
             throw new IllegalArgumentException("Colony already exists");
@@ -50,8 +63,8 @@ public class Colony implements Serializable {
         this.name = name;
         this.leader = leader;
         this.bread = breed;
-        this.storageCapacity = storageCapacity;
-        this.balance = balance;
+        this.storageCapacity = 10000; // مقدار پیش‌فرض
+        this.balance = 1000; // مقدار پیش‌فرض
         this.resources = new HashMap<>();
         this.incomes = new HashMap<>();
         this.usingFoodByNPCs = 0;
@@ -97,6 +110,9 @@ public class Colony implements Serializable {
             this.militariesPopulation = colony.getMilitariesPopulation();
             this.militaries = colony.getMilitaries();
             this.timeCoefficient = colony.getTimeCoefficient();
+
+            // مطمئن شو که منابع وجود دارند
+            ensureResourcesExist();
         }
     }
 
@@ -117,6 +133,24 @@ public class Colony implements Serializable {
             if (!this.incomes.containsKey(resource)) {
                 this.incomes.put(resource, 0);
             }
+        }
+    }
+
+    // مطمئن شو که همه منابع وجود دارند
+    private void ensureResourcesExist() {
+        if (this.resources == null) {
+            this.resources = new HashMap<>();
+        }
+
+        String[] requiredResources = {"wood", "stone", "gold", "iron", "food"};
+        for (String resource : requiredResources) {
+            if (!this.resources.containsKey(resource)) {
+                this.resources.put(resource, 0);
+            }
+        }
+
+        if (this.incomes == null) {
+            this.incomes = new HashMap<>();
         }
     }
 
@@ -222,13 +256,11 @@ public class Colony implements Serializable {
         if (materialName.equals("coin")) {
             return this.balance;
         } else {
-            Integer value = this.resources.get(materialName);
-            if (value == null) {
-                // If resource doesn't exist, create it and return 0
+            // مطمئن شو که منبع وجود دارد
+            if (!this.resources.containsKey(materialName)) {
                 this.resources.put(materialName, 0);
-                return 0;
             }
-            return value;
+            return this.resources.get(materialName);
         }
     }
 
@@ -279,10 +311,15 @@ public class Colony implements Serializable {
 
     // Special setters
     public void setResource(String material, int amount) throws IllegalArgumentException {
-        if (!Basics.exists(Basics.WAREHOUSE, material)) {
+        if (!Basics.exists(Basics.WAREHOUSE, material) && !material.equals("coin")) {
             throw new IllegalArgumentException("Invalid material: " + material);
         }
-        this.resources.put(material, amount);
+
+        if (material.equals("coin")) {
+            this.balance = amount;
+        } else {
+            this.resources.put(material, amount);
+        }
     }
 
     public void setIncome(String material, int amount) throws IllegalArgumentException {
@@ -303,32 +340,67 @@ public class Colony implements Serializable {
         this.importantBuildingsCode.put(name, key);
     }
 
-    // Other functions
+    // Other functions - این متد را کاملاً بازنویسی کنید
     public synchronized void updateResourceAmount(String resourceName, int amount)
         throws IllegalArgumentException {
-        if (!resourceName.equals("coin")) {
-            // Ensure resource exists
+        if (resourceName.equals("coin")) {
+            if (amount < 0 && Math.abs(amount) > this.balance) {
+                throw new IllegalArgumentException("Insufficient balance");
+            }
+            this.balance += amount;
+        } else {
+            // مطمئن شو که منبع وجود دارد
             if (!this.resources.containsKey(resourceName)) {
                 this.resources.put(resourceName, 0);
             }
 
             int currentAmount = this.resources.get(resourceName);
+            int newAmount = currentAmount + amount;
 
-            if (amount > 0 && amount > this.storageCapacity - getUsedCapacity()) {
-                this.resources.put(resourceName, this.storageCapacity - getUsedCapacity());
-            } else if (amount < 0 && Math.abs(amount) > currentAmount) {
+            if (newAmount < 0) {
                 throw new IllegalArgumentException("Insufficient resources: " + resourceName);
-            } else {
-                this.resources.put(resourceName, currentAmount + amount);
             }
-        } else if (amount < 0 && Math.abs(amount) > this.balance) {
-            throw new IllegalArgumentException("Insufficient balance");
-        } else {
-            this.balance += amount;
+
+            // بررسی ظرفیت انبار فقط برای منابع مثبت
+            if (amount > 0) {
+                int usedCapacity = getUsedCapacity();
+                int availableCapacity = this.storageCapacity - usedCapacity;
+
+                if (amount > availableCapacity) {
+                    // فقط تا حد ظرفیت اضافه کن
+                    this.resources.put(resourceName, currentAmount + availableCapacity);
+                } else {
+                    this.resources.put(resourceName, newAmount);
+                }
+            } else {
+                this.resources.put(resourceName, newAmount);
+            }
         }
     }
 
+    public static List<String> getAllPlayers() {
+        List<String> players = new ArrayList<>();
+        File saveDir = new File(SAVING_DIR);
 
+        // بررسی وجود پوشه saves
+        if (!saveDir.exists() || !saveDir.isDirectory()) {
+            return players;
+        }
+
+        // خواندن تمام فایل‌های .bin در پوشه saves
+        File[] files = saveDir.listFiles((dir, name) -> name.endsWith(".bin"));
+
+        if (files != null) {
+            for (File file : files) {
+                // استخراج نام کاربری از نام فایل
+                String filename = file.getName();
+                String username = filename.substring(0, filename.length() - 4); // حذف .bin
+                players.add(username);
+            }
+        }
+
+        return players;
+    }
 
     public synchronized void addBuilding(Building newBuilding) {
         this.buildings.put(newBuilding.getID().toString(), newBuilding);
@@ -365,6 +437,7 @@ public class Colony implements Serializable {
             return false;
         }
     }
+
     public boolean hasBuilding(String buildingType) {
         // از طریق کلیدها جستجو کنید
         for (String key : getBuildingKeys()) {
@@ -378,5 +451,15 @@ public class Colony implements Serializable {
     private List<String> getBuildingKeys() {
         List<String> keys = new ArrayList<>();
         return keys;
+    }
+
+    // متد کمکی برای دیباگ
+    public void printResources() {
+        System.out.println("=== Colony Resources ===");
+        System.out.println("Coin: " + this.balance);
+        for (String resource : new String[]{"wood", "stone", "gold", "iron", "food"}) {
+            System.out.println(resource + ": " + getMaterial(resource));
+        }
+        System.out.println("=======================");
     }
 }

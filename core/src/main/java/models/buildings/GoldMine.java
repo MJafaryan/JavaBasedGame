@@ -10,32 +10,46 @@ public class GoldMine extends Building implements Upgradable {
     private static JSONObject config;
 
     static {
-        config = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms_animalHusbandry");
+        // اصلاح کلید config - باید farms.goldMine باشد
+        JSONObject farmsConfig = (JSONObject) SimplerJson.getDataFromJson(configFile, "farms");
+        config = (JSONObject) farmsConfig.get("goldMine");
     }
 
-    public GoldMine(Texture texture, int x, int y, int width, int height, String goldMine, Colony colony) throws Exception {
-        super(texture , x, y, width, height, goldMine, colony);
+    public GoldMine(Texture texture, int x, int y, int width, int height, String type, Colony colony) throws Exception {
+        super(texture, x, y, width, height, type, colony);
+        this.maxLevel = 3;
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
-
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
+        this.health = ((Long) config.get("health")).intValue();
         this.lvl = 1;
-        int income = (int) (long) SimplerJson.getDataFromJson(config, "lvl1_output");
-        this.colony.setIncome("food", colony.getIncomes().get("food") + income);
+
+        JSONObject lvl1Config = (JSONObject) config.get("lvl1");
+        int income = ((Long) lvl1Config.get("output")).intValue();
+        this.colony.setIncome("coin", colony.getIncomes().get("coin") + income); // باید coin باشد نه food!
     }
 
     public void upgrade() throws Exception {
-        JSONObject newlvl = null;
-
-        if (lvl < 3) {
-            newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
+        if (lvl >= maxLevel) {
+            throw new Exception("Gold Mine is already at maximum level");
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
+        String levelKey = "lvl" + (this.lvl + 1);
+        JSONObject newLevelConfig = (JSONObject) config.get(levelKey);
 
-        // Set Changes:
+        if (newLevelConfig == null) {
+            throw new Exception("Configuration not found for level " + (this.lvl + 1));
+        }
+
+        // ابتدا درآمد سطح قبلی را کم کنید
+        JSONObject currentLevelConfig = (JSONObject) config.get("lvl" + this.lvl);
+        int currentIncome = ((Long) currentLevelConfig.get("output")).intValue();
+        this.colony.setIncome("coin", colony.getIncomes().get("coin") - currentIncome);
+
+        // سپس درآمد سطح جدید را اضافه کنید
         this.lvl++;
-        this.colony.setIncome("food",
-                colony.getIncomes().get("food") + (int) (long) SimplerJson.getDataFromJson(newlvl, "output"));
+        int newIncome = ((Long) newLevelConfig.get("output")).intValue();
+        this.colony.setIncome("coin", colony.getIncomes().get("coin") + newIncome);
     }
+
+    public int getLevel() { return lvl; }
+    public int getMaxLevel() { return maxLevel; }
 }

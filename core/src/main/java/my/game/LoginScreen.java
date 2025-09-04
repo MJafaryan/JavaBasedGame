@@ -13,6 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import models.user.Colony;
+import models.user.User;
 
 public class LoginScreen implements Screen {
     private final MyGame game;
@@ -120,8 +122,12 @@ public class LoginScreen implements Screen {
 
             if (touchX >= loginToGameButtonX && touchX <= loginToGameButtonX + loginToGameButtonWidth
                 && touchY >= loginToGameButtonY && touchY <= loginToGameButtonY + loginToGameButtonHeight) {
-                if(usernameField.getText().equals("Eisa") && passwordField.getText().equals("1234")) {
-                    game.setScreen(new GameScreen(game));
+                try {
+                    Colony colony = new Colony(new User(this.usernameField.getText(), this.passwordField.getText()));
+                    System.out.println(colony);
+                    game.setScreen(new GameScreen(game, colony));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 

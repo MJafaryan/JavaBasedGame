@@ -23,8 +23,6 @@ public class Tower extends Building {
         super(textrue , x , y ,height , weigth , "tower" , colony);
         this.attachments = (JSONObject) SimplerJson.getDataFromJson(config, "attachments");
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
-
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
     }
 
@@ -32,7 +30,6 @@ public class Tower extends Building {
         if (!hasFirePeat) {
             JSONObject firePeat = (JSONObject) SimplerJson.getDataFromJson(attachments, "firePeat");
             // pay cost
-            payCost((JSONObject) SimplerJson.getDataFromJson(firePeat, "cost"));
             this.hasFirePeat = true;
 
             // increase power attack
@@ -45,7 +42,6 @@ public class Tower extends Building {
             JSONObject fence = (JSONObject) SimplerJson.getDataFromJson(attachments, "fence");
             boolean hasFence = false;
             // pay cost
-            payCost((JSONObject) SimplerJson.getDataFromJson(fence, "cost"));
             this.hasFence = true;
 
             // increase health of build

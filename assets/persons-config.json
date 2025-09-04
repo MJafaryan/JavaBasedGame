@@ -4,7 +4,7 @@
 	},
 	"military": {
 		"foodPer60Sec": 1.5,
-		"iranian": {
+		"iran": {
 			"infantry": {
 				"price": {
 					"coin": 13,
@@ -45,7 +45,7 @@
 				"power": 50
 			}
 		},
-		"arabian": {
+		"arab": {
 			"infantry": {
 				"price": {
 					"coin": 13,
@@ -86,7 +86,7 @@
 				"power": 55
 			}
 		},
-		"mongolian": {
+		"mongol": {
 			"infantry": {
 				"price": {
 					"coin": 13,
@@ -128,7 +128,7 @@
 				"range": 10
 			}
 		},
-		"romans": {
+		"rome": {
 			"infantry": {
 				"price": {
 					"coin": 13,

@@ -15,8 +15,7 @@ public class Farm extends Building implements Upgradable {
 
     public Farm(Texture texture, int x, int y, int width, int height, String farm, Colony colony) throws Exception {
         super(texture , x, y, width, height, farm, colony);
-
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "lvl1_cost"));
+        this.maxLevel = 3;
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.lvl = 1;
@@ -31,11 +30,11 @@ public class Farm extends Building implements Upgradable {
             newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "cost"));
-
         // Set Changes:
         this.lvl++;
         this.colony.setIncome("food",
                 colony.getIncomes().get("food") + (int) (long) SimplerJson.getDataFromJson(newlvl, "output"));
     }
+    public int getLevel() { return lvl; }
+    public int getMaxLevel() { return maxLevel; }
 }

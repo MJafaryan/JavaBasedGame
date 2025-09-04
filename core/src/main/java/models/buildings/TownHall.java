@@ -1,10 +1,10 @@
 package models.buildings;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import org.json.simple.JSONObject;
 import datastructures.SimplerJson;
 import models.user.Colony;
-import models.user.User;
 
 public class TownHall extends Building implements Upgradable {
     private int lvl;
@@ -12,51 +12,125 @@ public class TownHall extends Building implements Upgradable {
 
     static {
         config = (JSONObject) SimplerJson.getDataFromJson(configFile, "townHall");
+        Gdx.app.log("TownHallDebug", "Static block - Config loaded: " + (config != null));
+        if (config != null) {
+            Gdx.app.log("TownHallDebug", "Config keys: " + config.keySet().toString());
+        }
     }
 
-    public TownHall(Texture texture, int x, int y, int width, int height, String ironMine, Colony colony) {
-        super(texture , x, y, width, height, ironMine, colony);
-        this.health = (int) (long) SimplerJson.getDataFromJson(config, "lvl1_health");
-        this.lvl = 1;
-        colony.setStorageCapacity((int) (long) SimplerJson.getDataFromJson(config, "lvl1_capacity"));
+    public TownHall(Texture texture, int x, int y, int width, int height, String type, Colony colony) {
+        super(texture, x, y, width, height, type, colony);
+        this.maxLevel = 5;
+
+        Gdx.app.log("TownHallDebug", "Constructor called - Type: " + type);
+        Gdx.app.log("TownHallDebug", "Config available: " + (config != null));
+
+        if (config != null) {
+            // خواندن صحیح از JSON
+            JSONObject lvl1Config = (JSONObject) config.get("lvl1");
+            Gdx.app.log("TownHallDebug", "lvl1Config: " + (lvl1Config != null));
+
+            if (lvl1Config != null) {
+                Gdx.app.log("TownHallDebug", "lvl1Config keys: " + lvl1Config.keySet().toString());
+
+                Object healthObj = lvl1Config.get("health");
+                Object capacityObj = lvl1Config.get("capacity");
+
+                Gdx.app.log("TownHallDebug", "health object: " + healthObj + " (type: " + (healthObj != null ? healthObj.getClass().getSimpleName() : "null") + ")");
+                Gdx.app.log("TownHallDebug", "capacity object: " + capacityObj + " (type: " + (capacityObj != null ? capacityObj.getClass().getSimpleName() : "null") + ")");
+
+                if (healthObj instanceof Long) {
+                    this.health = ((Long) healthObj).intValue();
+                } else if (healthObj instanceof Integer) {
+                    this.health = (Integer) healthObj;
+                } else {
+                    Gdx.app.error("TownHallDebug", "Invalid health type: " + (healthObj != null ? healthObj.getClass().getSimpleName() : "null"));
+                    this.health = 1000; // مقدار پیش‌فرض
+                }
+
+                if (capacityObj instanceof Long) {
+                    colony.setStorageCapacity(((Long) capacityObj).intValue());
+                } else if (capacityObj instanceof Integer) {
+                    colony.setStorageCapacity((Integer) capacityObj);
+                } else {
+                    Gdx.app.error("TownHallDebug", "Invalid capacity type: " + (capacityObj != null ? capacityObj.getClass().getSimpleName() : "null"));
+                    colony.setStorageCapacity(300); // مقدار پیش‌فرض
+                }
+
+                this.lvl = 1;
+
+                Gdx.app.log("TownHallDebug", "Initialized - Level: " + lvl + ", Health: " + health + ", Capacity: " + colony.getStorageCapacity());
+            } else {
+                Gdx.app.error("TownHallDebug", "lvl1Config is null!");
+            }
+        } else {
+            Gdx.app.error("TownHallDebug", "Config is null in constructor!");
+        }
     }
 
     public void upgrade() throws Exception {
-        JSONObject newlvl = null;
+        Gdx.app.log("TownHallDebug", "=== Upgrade called ===");
+        Gdx.app.log("TownHallDebug", "Current level: " + lvl + ", Max level: " + maxLevel);
 
-        if (lvl < 5) {
-            newlvl = (JSONObject) SimplerJson.getDataFromJson(config, "lvl" + (this.lvl + 1));
+        if (lvl >= maxLevel) {
+            Gdx.app.error("TownHallDebug", "Already at maximum level!");
+            throw new Exception("Town Hall is already at maximum level");
         }
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(newlvl, "upgradeCost"));
+        String levelKey = "lvl" + (this.lvl + 1);
+        Gdx.app.log("TownHallDebug", "Looking for level key: " + levelKey);
 
-        // Set Changes:
-        this.lvl++;
-        this.colony.setStorageCapacity((int) (long) SimplerJson.getDataFromJson(newlvl, "capacity"));
-        this.health = (int) (long) SimplerJson.getDataFromJson(newlvl, "health");
+        if (config != null && config.containsKey(levelKey)) {
+            JSONObject newLevelConfig = (JSONObject) config.get(levelKey);
+            Gdx.app.log("TownHallDebug", "New level config found: " + (newLevelConfig != null));
+
+            if (newLevelConfig != null) {
+                Gdx.app.log("TownHallDebug", "New level config keys: " + newLevelConfig.keySet().toString());
+
+                // خواندن health
+                Object healthObj = newLevelConfig.get("health");
+                Object capacityObj = newLevelConfig.get("capacity");
+
+                Gdx.app.log("TownHallDebug", "New health: " + healthObj);
+                Gdx.app.log("TownHallDebug", "New capacity: " + capacityObj);
+
+                if (healthObj instanceof Long) {
+                    this.health = ((Long) healthObj).intValue();
+                } else if (healthObj instanceof Integer) {
+                    this.health = (Integer) healthObj;
+                }
+
+                if (capacityObj instanceof Long) {
+                    this.colony.setStorageCapacity(((Long) capacityObj).intValue());
+                } else if (capacityObj instanceof Integer) {
+                    this.colony.setStorageCapacity((Integer) capacityObj);
+                }
+
+                // اعمال تغییرات
+                this.lvl++;
+
+                Gdx.app.log("TownHallDebug", "Upgrade successful! New level: " + lvl + ", Health: " + health + ", Capacity: " + colony.getStorageCapacity());
+            } else {
+                Gdx.app.error("TownHallDebug", "New level config is null!");
+                throw new Exception("Configuration not found for level " + (this.lvl + 1));
+            }
+        } else {
+            Gdx.app.error("TownHallDebug", "Level key not found in config!");
+            Gdx.app.error("TownHallDebug", "Config available: " + (config != null));
+            if (config != null) {
+                Gdx.app.error("TownHallDebug", "Available keys: " + config.keySet().toString());
+            }
+            throw new Exception("Configuration not found for level " + (this.lvl + 1));
+        }
     }
 
-    public static void main(String[] args) {
-        User user = new User("ali", "345");
-        Colony colony = new Colony("ali", user, "pesian", 0, 0);
+    public int getLevel() {
+        Gdx.app.log("TownHallDebug", "getLevel() called: " + lvl);
+        return lvl;
+    }
 
-        TownHall townHall;
-        try{
-            townHall = new TownHall(null, 0, 0, 0, 0, null, colony);
-
-
-            colony.setImportantBuilding("TownHall" , "townhall");
-            System.out.println("set is successful");
-
-            System.out.println("coin :" +colony.getBalance());
-            System.out.println("wood :" + colony.getResources().get("wood"));
-            System.out.println("iron :" + colony.getResources().get("iron"));
-            System.out.println("stone :" + colony.getResources().get("stone"));
-            System.out.println("food :" + colony.getResources().get("food"));
-//            System.out.println("Town Hall created");
-//            System.out.println("lvl th : " + townHall.lvl);
-        }catch(Exception e){
-
-        }
+    public int getMaxLevel() {
+        Gdx.app.log("TownHallDebug", "getMaxLevel() called: " + maxLevel);
+        return maxLevel;
     }
 }

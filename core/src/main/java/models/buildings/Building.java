@@ -20,6 +20,8 @@ public abstract class Building  {
     protected String type;
     protected int health;
     protected Colony colony;
+    protected int level = 1;
+    protected int maxLevel = 1;
     public static JSONObject configFile;
 
     static {
@@ -40,6 +42,7 @@ public abstract class Building  {
     }
 
 
+
     public int getHealth() {
         return health;
     }
@@ -58,35 +61,22 @@ public abstract class Building  {
         health -= damage;
     }
 
-    public void payCost(JSONObject costsJSON) throws Exception {
-        HashMap<Integer> requiredMaterials = new HashMap<>();
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (SimplerJson.getDataFromJson(costsJSON, material) != null) {
-                requiredMaterials.put(material,
-                        (int) (long) SimplerJson.getDataFromJson(costsJSON, material));
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null
-                    && requiredMaterials.get(material) > this.colony.getMaterial(material)) {
-                throw new Exception("No enough " + material);
-            }
-        }
-
-        for (String material : Basics.MATERIALS_NAME) {
-            if (requiredMaterials.get(material) != null) {
-                this.colony.updateResourceAmount(material, requiredMaterials.get(material) * -1);
-            }
-        }
-    }
-
     public Vector2 getPosition() {
         return position;
     }
 
     public Texture getTexture() {
         return texture;
+    }
+
+    public int getLevel() { return level; }
+
+    public int getMaxLevel() {return  maxLevel; }
+
+    public void upgrade() throws Exception {
+        if (level >= maxLevel) {
+            throw new Exception("Building is already at maximum level");
+        }
+        level++;
     }
 }

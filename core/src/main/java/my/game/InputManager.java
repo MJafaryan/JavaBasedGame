@@ -36,6 +36,8 @@ public class InputManager {
         float oldX = camera.position.x;
         float oldY = camera.position.y;
 
+
+
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A))
             camera.position.x -= moveSpeed;
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D))

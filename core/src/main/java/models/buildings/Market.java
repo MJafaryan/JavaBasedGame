@@ -38,7 +38,6 @@ public class Market extends Building {
         super(texture, x, y, width, height, market, colony);
         JSONObject config = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
 
-        payCost((JSONObject) SimplerJson.getDataFromJson(config, "cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(config, "health");
         this.tradingBox = (int) (long) SimplerJson.getDataFromJson(config, "tradingBox");
@@ -53,30 +52,28 @@ public class Market extends Building {
         }
     }
 
-    public void sellProduct(String productName, int amount) throws Exception {
-        amount *= this.tradingBox;
+    public void sellProduct(String productName) throws Exception {
         for (Product product : products) {
             if (product.getName().equals(productName)) {
-                if (amount > this.colony.getMaterial(productName)) {
+                if (this.tradingBox > this.colony.getMaterial(productName)) {
                     throw new Exception("Not enough " + productName + " in colony");
                 }
 
-                this.colony.updateResourceAmount(productName, amount * -1);
-                this.colony.updateResourceAmount("coin", amount * product.getSellingPrice());
+                this.colony.updateResourceAmount(productName, tradingBox*-1);
+                this.colony.updateResourceAmount("coin", tradingBox * product.getSellingPrice());
             }
         }
     }
 
-    public void buyProduct(String productName, int amount) throws Exception {
-        amount *= this.tradingBox;
+    public void buyProduct(String productName) throws Exception {
         for (Product product : products) {
             if (product.getName().equals(productName)) {
-                if (amount * product.getBuyingPrice() > this.colony.getBalance()) {
+                if (tradingBox * product.getBuyingPrice() > this.colony.getBalance()) {
                     throw new Exception("Not enough coins in colony");
                 }
 
-                this.colony.updateResourceAmount(productName, amount);
-                this.colony.updateResourceAmount("coin", amount * product.getBuyingPrice() * -1);
+                this.colony.updateResourceAmount(productName, tradingBox);
+                this.colony.updateResourceAmount("coin", tradingBox * product.getBuyingPrice() * -1);
             }
         }
     }
