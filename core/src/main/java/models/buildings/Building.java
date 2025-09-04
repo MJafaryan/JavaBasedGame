@@ -1,19 +1,16 @@
 package models.buildings;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import models.Basics;
 import models.user.Colony;
 import org.json.simple.JSONObject;
 import datastructures.HashMap;
 import datastructures.SimplerJson;
+import java.io.Serializable;
 import java.util.UUID;
 
-public abstract class Building {
-    public final class Coordinates {
+public abstract class Building implements Serializable {
+    public final class Coordinates implements Serializable {
         private Vector2 location;
         private int height;
         private int width;
