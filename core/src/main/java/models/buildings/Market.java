@@ -36,7 +36,7 @@ public class Market extends Building {
     private Product[] products;
 
     public Market(Colony colony, Vector2 location, int height, int width) throws Exception {
-        super(colony, location, height, width, "market");
+        super(colony, location, height, width, "market" ,1);
         JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "market");
         payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
 

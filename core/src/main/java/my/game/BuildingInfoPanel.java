@@ -8,14 +8,22 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+// import datastructures.HashMap;
+import java.util.HashMap;
+import datastructures.SimplerJson;
+import models.Basics;
 import models.buildings.Building;
 import models.buildings.Market;
-import models.buildings.Upgradable;
+// import models.buildings.Upgradable;
 import models.user.Colony;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
 
 import static models.user.Colony.getAllPlayers;
 
@@ -42,6 +50,9 @@ public class BuildingInfoPanel {
     private boolean attackInfoPanelVisible;
     private Colony playerColony;
 
+    ////////////////////
+    private BuildingConfigManager configManager;
+
     public BuildingInfoPanel(Skin skin, Stage uiStage, GameScreen gameScreen) {
         this.skin = skin;
         this.uiStage = uiStage;
@@ -51,6 +62,7 @@ public class BuildingInfoPanel {
         createPauseInfoPanel();
         createAttackInfoPanel();
     }
+
     public void createAttackInfoPanel() {
         attackInfoPanel = new Table();
         attackInfoPanel.setVisible(false);
@@ -141,6 +153,7 @@ public class BuildingInfoPanel {
             attackInfoPanel.setPosition((stageWidth - panelWidth) / 2, (stageHeight - panelHeight) / 2);
         }
     }
+
     private void initiateAttack(String playerName) {
         gameScreen.addMessage("Preparing to attack: " + playerName);
 
@@ -149,6 +162,7 @@ public class BuildingInfoPanel {
 
         setAttackInfoPanelVisible(false);
     }
+
     private List<String> getAllPlayers() {
         List<String> players = new ArrayList<>();
         File saveDir = new File("data/saves/"); // مطمئن شوید این مسیر درست است
@@ -369,7 +383,7 @@ public class BuildingInfoPanel {
             nameLabel.setFontScale(1.2f);
             barrackTable.add(nameLabel).colspan(2).center().padBottom(10).row();
 
-            String[] soldiers = {"Infantry", "Archer", "Cavalry", "Wizard" , "spy"};
+            String[] soldiers = { "Infantry", "Archer", "Cavalry", "Wizard", "spy" };
             for (int i = 0; i < soldiers.length; i++) {
                 TextButton soldierBtn = new TextButton(soldiers[i], skin);
                 soldierBtn.getLabel().setFontScale(1f);
@@ -392,7 +406,7 @@ public class BuildingInfoPanel {
             buyLabel.setFontScale(1.2f);
             marketTable.add(buyLabel).colspan(2).center().row();
 
-            String[] resources = {"food", "wood", "stone", "iron"};
+            String[] resources = { "food", "wood", "stone", "iron" };
             TextButton[] buyBtns = new TextButton[resources.length];
 
             for (int i = 0; i < resources.length; i++) {
@@ -419,7 +433,8 @@ public class BuildingInfoPanel {
                     }
                 });
 
-                if (i % 2 == 1) marketTable.row();
+                if (i % 2 == 1)
+                    marketTable.row();
             }
 
             marketTable.row();
@@ -452,7 +467,8 @@ public class BuildingInfoPanel {
                     }
                 });
 
-                if (i % 2 == 1) marketTable.row();
+                if (i % 2 == 1)
+                    marketTable.row();
             }
 
             buildingInfoPanel.add(marketTable).colspan(2).pad(10).row();
@@ -479,6 +495,7 @@ public class BuildingInfoPanel {
             buildingInfoPanel.setVisible(visible);
         }
     }
+
     public void setAttackInfoPanel(boolean visible) {
         attackInfoPanelVisible = visible;
         if (attackInfoPanel != null) {
@@ -486,14 +503,192 @@ public class BuildingInfoPanel {
         }
     }
 
-    private boolean canUpgradeBuilding(Building building) {
-        if (!(building instanceof Upgradable))
-            return false;
-        Upgradable upgradableBuilding = (Upgradable) building;
-        if (upgradableBuilding.getLevel() < upgradableBuilding.getMaxLevel())
-            return true;
+    /////////
+
+    public int parseMaterialCost(Object costObj) {
+        return configManager.parseMaterialCost(costObj);
+    }
+
+    public JSONObject getCostObject(JSONObject config) {
+        return configManager.getCostObject(config);
+    }
+
+    public JSONObject getNestedConfig(String configKey) {
+        try {
+            Gdx.app.log("ConfigDebug", "Looking for config key: " + configKey);
+
+            if (configKey == null || configKey.isEmpty()) {
+                Gdx.app.error("ConfigDebug", "Config key is null or empty");
+                return null;
+            }
+
+            if (configKey.contains(".")) {
+                String[] keys = configKey.split("\\.");
+                if (keys.length == 0) {
+                    Gdx.app.error("ConfigDebug", "Invalid config key format: " + configKey);
+                    return null;
+                }
+
+                JSONObject current = (JSONObject) SimplerJson.getDataFromJson(Building.getConfigFile(), keys[0]);
+                if (current == null) {
+                    Gdx.app.error("ConfigDebug", "First level not found: " + keys[0]);
+                    return null;
+                }
+
+                for (int i = 1; i < keys.length; i++) {
+                    if (current == null) {
+                        Gdx.app.error("ConfigDebug", "Current is null at key: " + keys[i]);
+                        return null;
+                    }
+
+                    Object nextLevel = current.get(keys[i]);
+                    if (nextLevel instanceof JSONObject) {
+                        current = (JSONObject) nextLevel;
+                    } else {
+                        Gdx.app.error("ConfigDebug", "Key '" + keys[i] + "' is not a JSONObject, it's: " +
+                                (nextLevel != null ? nextLevel.getClass().getSimpleName() : "null"));
+                        return null;
+                    }
+                }
+                return current;
+
+            } else {
+                JSONObject buildingConfig = (JSONObject) SimplerJson.getDataFromJson(Building.getConfigFile(),
+                        configKey);
+
+                if (buildingConfig == null) {
+                    Gdx.app.error("ConfigDebug", "Direct config not found: " + configKey);
+                    return null;
+                }
+
+                return buildingConfig;
+            }
+        } catch (Exception e) {
+            Gdx.app.error("ConfigDebug", "Error getting nested config for '" + configKey + "': " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public String getConfigKey(String buildingType) {
+        Map<String, String> configKeys = new HashMap<>();
+        configKeys.put("house", "house");
+        configKeys.put("barracks", "barracks");
+        configKeys.put("farm", "farms.farm");
+        configKeys.put("hospital", "hospital");
+        configKeys.put("stone", "farms.stoneMine");
+        configKeys.put("gold", "farms.goldMine");
+        configKeys.put("iron", "farms.ironMine");
+        configKeys.put("husbandry", "farms.animalHusbandry");
+        configKeys.put("townHall", "townHall");
+        configKeys.put("market", "market");
+        configKeys.put("tower", "tower");
+        configKeys.put("lumbering", "farms.lumbering");
+
+        // برای backward compatibility
+        configKeys.put("iron_mine", "farms.ironMine");
+        configKeys.put("stone_mine", "farms.stoneMine");
+        configKeys.put("gold_mine", "farms.goldMine");
+
+        String key = configKeys.get(buildingType);
+        Gdx.app.log("ConfigKeyDebug", "Building: " + buildingType + ", ConfigKey: " + key);
+        return key;
+    }
+
+    public boolean hasEnoughResourcesForUpgrade(Building building) {
+        try {
+            String configKey = getConfigKey(building.getType());
+            Gdx.app.log("UpgradeDebug", "=== Checking upgrade for: " + building.getType() + " ===");
+            Gdx.app.log("UpgradeDebug", "Config key: " + configKey);
+
+            JSONObject config = getNestedConfig(configKey);
+
+            if (config == null) {
+                Gdx.app.error("UpgradeDebug", "Config is null for: " + building.getType());
+                return false;
+            }
+
+            String levelKey = "lvl" + (building.getLevel() + 1);
+            Gdx.app.log("UpgradeDebug", "Looking for level key: " + levelKey);
+            Gdx.app.log("UpgradeDebug", "Available keys in config: " + config.keySet().toString());
+
+            if (config.containsKey(levelKey)) {
+                JSONObject levelConfig = (JSONObject) config.get(levelKey);
+                Gdx.app.log("UpgradeDebug", "Level config keys: " + levelConfig.keySet().toString());
+
+                JSONObject cost = getCostObject(levelConfig);
+
+                if (cost != null) {
+                    Gdx.app.log("UpgradeDebug", "Cost found: " + cost.toJSONString());
+
+                    for (String material : Basics.MATERIALS_NAME) {
+                        Object materialCostObj = cost.get(material);
+                        if (materialCostObj != null) {
+                            int costAmount = parseMaterialCost(materialCostObj);
+                            int available = playerColony.getRecourse(material);
+                            Gdx.app.log("UpgradeDebug",
+                                    material + " - Cost: " + costAmount + ", Available: " + available);
+
+                            if (costAmount > 0 && available < costAmount) {
+                                Gdx.app.log("UpgradeDebug", "Not enough " + material);
+                                return false;
+                            }
+                        }
+                    }
+                    Gdx.app.log("UpgradeDebug", "Enough resources for upgrade!");
+                    return true;
+                } else {
+                    Gdx.app.error("UpgradeDebug", "Cost is null for level: " + levelKey);
+
+                    // بررسی دستی برای upgradeCost (مخصوص Town Hall)
+                    if (levelConfig.containsKey("upgradeCost")) {
+                        Object upgradeCostObj = levelConfig.get("upgradeCost");
+                        if (upgradeCostObj instanceof JSONObject) {
+                            JSONObject upgradeCost = (JSONObject) upgradeCostObj;
+                            Gdx.app.log("UpgradeDebug", "Manual upgradeCost found: " + upgradeCost.toJSONString());
+
+                            boolean enoughResources = true;
+                            for (String material : Basics.MATERIALS_NAME) {
+                                Object materialCostObj = upgradeCost.get(material);
+                                if (materialCostObj != null) {
+                                    int costAmount = parseMaterialCost(materialCostObj);
+                                    int available = playerColony.getRecourse(material);
+                                    Gdx.app.log("UpgradeDebug",
+                                            material + " - UpgradeCost: " + costAmount + ", Available: " + available);
+
+                                    if (costAmount > 0 && available < costAmount) {
+                                        enoughResources = false;
+                                        Gdx.app.log("UpgradeDebug", "Not enough " + material + " for upgrade");
+                                    }
+                                }
+                            }
+                            Gdx.app.log("UpgradeDebug", "Enough resources for upgrade: " + enoughResources);
+                            return enoughResources;
+                        }
+                    } else {
+                        Gdx.app.error("UpgradeDebug", "No upgradeCost found either!");
+                    }
+                }
+            } else {
+                Gdx.app.error("UpgradeDebug", "Level key not found: " + levelKey);
+            }
+        } catch (Exception e) {
+            Gdx.app.error("UpgradeDebug", "Error: " + e.getMessage(), e);
+        }
         return false;
     }
+
+    private boolean canUpgradeBuilding(Building building) {
+        return building.getLevel() < building.getMaxLevel() &&
+                hasEnoughResourcesForUpgrade(building);
+    }
+    // private boolean canUpgradeBuilding(Building building) {
+    // if (!(building instanceof Upgradable))
+    // return false;
+    // Upgradable upgradableBuilding = (Upgradable) building;
+    // if (upgradableBuilding.getLevel() < upgradableBuilding.getMaxLevel())
+    // return true;
+    // return false;
+    // }
 
     private String getUpgradeCostString(Building building) {
         return gameScreen.getUpgradeCostString(building);

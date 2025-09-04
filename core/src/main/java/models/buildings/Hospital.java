@@ -13,7 +13,7 @@ public class Hospital extends Building {
     private int healHeroCost;
 
     public Hospital(Colony colony, Vector2 location, int height, int width) throws Exception {
-        super(colony, location, height, width, "hospital");
+        super(colony, location, height, width, "hospital",1);
 
         JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "hospital");
         payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));

@@ -14,7 +14,7 @@ public class House extends Building implements Runnable {
     private Person[] personsArray;
 
     public House(Colony colony, Vector2 location, int height, int width) throws Exception {
-        super(colony, location, height, width, "house");
+        super(colony, location, height, width, "house",1);
         JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "house");
         payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
         this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");

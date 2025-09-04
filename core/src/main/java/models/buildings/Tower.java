@@ -15,7 +15,7 @@ public class Tower extends Building {
     private Military[] archers;
 
     public Tower(Colony colony, Vector2 location, int height, int width) throws Exception {
-        super(colony, location, height, width, "tower");
+        super(colony, location, height, width, "tower",1);
         JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "tower");
         payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "cost"));
         this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");

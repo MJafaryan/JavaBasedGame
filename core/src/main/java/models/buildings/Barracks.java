@@ -9,42 +9,31 @@ import datastructures.SimplerJson;
 import org.json.simple.JSONArray;
 import models.user.Colony;
 
-public class Barracks extends Building implements Upgradable {
-    private int lvl;
+public class Barracks extends Building{
     private JSONArray unavailableUnits;
 
     public Barracks(Colony colony, Vector2 location, int height, int width) throws Exception {
-        super(colony, location, height, width, "barracks");
+        super(colony, location, height, width, "barracks",2);
 
         JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "barracks");
         payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "lvl1_cost"));
 
         this.health = (int) (long) SimplerJson.getDataFromJson(buildingInfo, "health");
-        this.lvl = 1;
         this.unavailableUnits = (JSONArray) SimplerJson.getDataFromJson(buildingInfo, "lvl1_unavailableUnits");
     }
 
-    @Override
     public void upgrade() throws Exception {
-        if (lvl == 1) {
+        if (this.level == 1) {
             JSONObject buildingInfo = (JSONObject) SimplerJson.getDataFromJson(configFile, "barracks");
             payCost((JSONObject) SimplerJson.getDataFromJson(buildingInfo, "lvl2_cost"));
 
-            this.lvl++;
+            this.level++;
             this.unavailableUnits = null;
         }
     }
 
     public JSONArray getUnavailableUnits() {
         return unavailableUnits;
-    }
-
-    public int getLevel() {
-        return this.lvl;
-    }
-
-    public int getMaxLevel() {
-        return 2;
     }
 
     public void destroy() {

@@ -12,7 +12,7 @@ import datastructures.HashMap;
 import datastructures.SimplerJson;
 import java.util.UUID;
 
-public abstract class Building  {
+public abstract class Building {
     public final class Coordinates {
         private Vector2 location;
         private int height;
@@ -48,22 +48,30 @@ public abstract class Building  {
     protected Colony colony;
     protected static JSONObject configFile;
     protected boolean isAlive;
+    protected int level;
+    private int maxLvl;
 
     static {
         configFile = SimplerJson.readJson("config/building-config.json");
     }
 
-    public Building(Colony colony, Vector2 location, int height, int width, String buildingName) {
+    public Building(Colony colony, Vector2 location, int height, int width, String buildingName, int maxLvl) {
         this.id = UUID.randomUUID();
         this.type = buildingName;
         this.coordinates = new Coordinates(location, height, width);
         this.colony = colony;
         this.isAlive = true;
+        this.level = 1;
+        this.maxLvl = maxLvl;
 
         colony.addBuilding(this);
     }
 
     public abstract void destroy();
+
+    public void upgrade() throws Exception {
+
+    }
 
     public int getHealth() {
         return health;
@@ -97,6 +105,14 @@ public abstract class Building  {
         HashMap<Building> buildingsHashMap = this.colony.getBuildings();
         buildingsHashMap.delete(getID().toString());
         this.colony.setBuildings(buildingsHashMap);
+    }
+
+    public int getLevel() {
+        return this.level;
+    }
+
+    public int getMaxLevel() {
+        return this.maxLvl;
     }
 
     public void payCost(JSONObject costsJSON) throws Exception {

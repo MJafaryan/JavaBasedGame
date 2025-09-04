@@ -127,7 +127,7 @@ public class Colony extends Thread implements Serializable {
 
     public static Colony load(String leaderName) {
         try (FileInputStream fileIn = new FileInputStream(
-                String.format("%s%s.bin", SAVE_DIR, leaderName));
+                String.format("assets/%s%s.bin", SAVE_DIR, leaderName));
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
             return (Colony) objectIn.readObject();
         } catch (IOException | ClassNotFoundException e) {
