@@ -9,12 +9,16 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.json.simple.JSONObject;
 import models.Basics;
 import models.buildings.Building;
 import models.buildings.House;
 
-public class Colony extends Thread {
+public class Colony extends Thread implements Serializable {
     private final static String SAVE_DIR = "data/saves/";
 
     private User leader;
@@ -121,7 +125,7 @@ public class Colony extends Thread {
         }
     }
 
-    private static Colony load(String leaderName) {
+    public static Colony load(String leaderName) {
         try (FileInputStream fileIn = new FileInputStream(
                 String.format("%s%s.bin", SAVE_DIR, leaderName));
                 ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
@@ -219,7 +223,7 @@ public class Colony extends Thread {
 
     public int getRemainingStorageCapacity() {
         int amount = this.storageCapacity;
-        for (String material : Basics.MATERIALS_NAME) {
+        for (String material : Basics.WAREHOUSE) {
             amount -= getRecourse(material);
         }
 
@@ -264,6 +268,30 @@ public class Colony extends Thread {
 
     public LinkedList<House> getEmptyHouses() {
         return this.emptyHouses;
+    }
+
+    public static List<String> getAllPlayers() {
+        List<String> players = new ArrayList<>();
+        File saveDir = new File(SAVE_DIR);
+
+        // بررسی وجود پوشه saves
+        if (!saveDir.exists() || !saveDir.isDirectory()) {
+            return players;
+        }
+
+        // خواندن تمام فایل‌های .bin در پوشه saves
+        File[] files = saveDir.listFiles((dir, name) -> name.endsWith(".bin"));
+
+        if (files != null) {
+            for (File file : files) {
+                // استخراج نام کاربری از نام فایل
+                String filename = file.getName();
+                String username = filename.substring(0, filename.length() - 4); // حذف .bin
+                players.add(username);
+            }
+        }
+
+        return players;
     }
 
     // Setters

@@ -52,6 +52,10 @@ public class Mine extends Building implements Runnable, Upgradable {
         return this.level;
     }
 
+    public int getMaxLevel() {
+        return 3;
+    }
+
     @Override
     public void destroy() {
         deleteFromBuildings();

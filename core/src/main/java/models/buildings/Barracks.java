@@ -43,6 +43,10 @@ public class Barracks extends Building implements Upgradable {
         return this.lvl;
     }
 
+    public int getMaxLevel() {
+        return 2;
+    }
+
     public void destroy() {
         HashMap<Building> importantBuildings = this.colony.getImportantBuildings();
         HashMap<Building> buildings = this.colony.getBuildings();

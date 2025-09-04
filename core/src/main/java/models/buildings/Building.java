@@ -42,7 +42,7 @@ public abstract class Building  {
     }
 
     private UUID id;
-    protected Texture texture;
+    protected String type;
     protected Coordinates coordinates;
     protected int health;
     protected Colony colony;
@@ -55,7 +55,7 @@ public abstract class Building  {
 
     public Building(Colony colony, Vector2 location, int height, int width, String buildingName) {
         this.id = UUID.randomUUID();
-        this.texture = loadTexture(buildingName);
+        this.type = buildingName;
         this.coordinates = new Coordinates(location, height, width);
         this.colony = colony;
         this.isAlive = true;
@@ -81,8 +81,8 @@ public abstract class Building  {
         return this.coordinates;
     }
 
-    public Texture getTexture() {
-        return texture;
+    public String getType() {
+        return this.type;
     }
 
     public static JSONObject getConfigFile() {
@@ -97,21 +97,6 @@ public abstract class Building  {
         HashMap<Building> buildingsHashMap = this.colony.getBuildings();
         buildingsHashMap.delete(getID().toString());
         this.colony.setBuildings(buildingsHashMap);
-    }
-
-    private static Texture loadTexture(String buildingName) {
-        String path = String.format("texture/%s-texture.png", buildingName.toLowerCase());
-        try {
-            return new Texture(Gdx.files.internal(path));
-        } catch (Exception e) {
-            Gdx.app.error("Texture", "Failed to load: " + path);
-            Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
-            pixmap.setColor(Color.MAGENTA);
-            pixmap.fill();
-            Texture texture = new Texture(pixmap);
-            pixmap.dispose();
-            return texture;
-        }
     }
 
     public void payCost(JSONObject costsJSON) throws Exception {

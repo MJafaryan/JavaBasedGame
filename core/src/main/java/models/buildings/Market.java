@@ -64,31 +64,29 @@ public class Market extends Building {
         this.colony.setBuildings(buildings);
     }
 
-    public void buyProduct(String productName, int amount) throws Exception {
-        amount *= this.tradingBox;
+    public void buyProduct(String productName) throws Exception {
         for (Product product : products) {
             if (product.getName().equals(productName)) {
-                if (amount * product.getBuyingPrice() > this.colony.getBalance()) {
+                if (this.tradingBox * product.getBuyingPrice() > this.colony.getBalance()) {
                     throw new Exception("Not enough coins in colony");
                 }
 
-                this.colony.updateRecourse(productName, amount);
-                this.colony.updateRecourse("coin", amount * -1);
+                this.colony.updateRecourse(productName, this.tradingBox);
+                this.colony.updateRecourse("coin", this.tradingBox * -1);
                 return;
             }
         }
     }
 
-    public void sellProduct(String productName, int amount) throws Exception {
-        amount *= this.tradingBox;
+    public void sellProduct(String productName) throws Exception {
         for (Product product : products) {
             if (product.getName().equals(productName)) {
-                if (amount < this.colony.getRecourse(productName)) {
+                if (this.tradingBox < this.colony.getRecourse(productName)) {
                     throw new Exception("Not enough coins in colony");
                 }
 
-                this.colony.updateRecourse(productName, amount * -1);
-                this.colony.updateRecourse("coin", amount * product.getSellingPrice());
+                this.colony.updateRecourse(productName, this.tradingBox * -1);
+                this.colony.updateRecourse("coin", this.tradingBox * product.getSellingPrice());
                 return;
             }
         }

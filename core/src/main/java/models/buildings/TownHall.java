@@ -20,6 +20,10 @@ public class TownHall extends Building implements Upgradable {
         return this.lvl;
     }
 
+    public int getMaxLevel() {
+        return 5;
+    }
+
     public void upgrade() throws Exception {
         JSONObject newlvl = null;
 
